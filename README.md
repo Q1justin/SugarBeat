@@ -2,7 +2,31 @@
 
 A React Native app to help people track and reduce their added sugar consumption.
 
+## Features
+- Track daily added sugar intake
+- Search food items using Edamam API
+- Create and share custom food items and recipes
+- Connect with friends and share recipes
+- Set and track sugar intake goals
+
 ## Development
+
+### Prerequisites
+- Node.js
+- npm
+- Supabase account
+
+### Setup
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Set up environment variables in `.env`:
+```
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
 ### Supabase Types
 

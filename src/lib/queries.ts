@@ -90,19 +90,16 @@ export async function getFriendsSharedRecipes(userId: string) {
       )
     `)
     .eq('is_shared', true)
-    .in('user_id', supabase
-      .from('friend_connections')
-      .select('addressee_id')
-      .eq('requester_id', userId)
-      .eq('status', 'accepted')
-      .union(all: true, 
-        supabase
-          .from('friend_connections')
-          .select('requester_id')
-          .eq('addressee_id', userId)
-          .eq('status', 'accepted')
-      )
-    );
+    .filter('user_id', 'in', (
+      supabase
+        .from('friend_connections')
+        .select('addressee_id, requester_id')
+        .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+        .eq('status', 'accepted')
+    ).select(`case 
+      when requester_id = '${userId}' then addressee_id 
+      else requester_id 
+      end`));
 
   if (error) throw error;
   return data;

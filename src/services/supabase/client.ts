@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '../../types/supabase';
 
 // Ensure the environment variables are set
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://qqglnlbkktjtuqruiosn.supabase.com';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxZ2xubGJra3RqdHVxcnVpb3NuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NTMyMTMsImV4cCI6MjA2NTUyOTIxM30.12jTHWRyBQyzvxU4TWjduRmG8QbtZz6nzMWRveclYKk';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your .env file');

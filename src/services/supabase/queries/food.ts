@@ -51,7 +51,7 @@ export async function logFoodEntry(
   userId: string,
   entry: {
     customFoodId?: string;
-    edamamFoodId?: string;
+    usdaFoodId?: string;
     recipeId?: string;
     servingSize: number;
     servingUnit: string;
@@ -62,7 +62,7 @@ export async function logFoodEntry(
     .insert({
       user_id: userId,
       custom_food_id: entry.customFoodId,
-      edamam_food_id: entry.edamamFoodId,
+      usda_food_id: entry.usdaFoodId,
       recipe_id: entry.recipeId,
       serving_size: entry.servingSize,
       serving_unit: entry.servingUnit,

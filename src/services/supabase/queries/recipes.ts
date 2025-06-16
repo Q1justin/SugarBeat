@@ -14,7 +14,7 @@ export async function getFriendsSharedRecipes(userId: string) {
         amount,
         unit,
         custom_foods (*),
-        edamam_food_id
+        usda_food_id
       )
     `)
     .eq('is_shared', true)

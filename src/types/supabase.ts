@@ -49,7 +49,7 @@ export type Database = {
         Row: {
           created_at: string
           custom_food_id: string | null
-          edamam_food_id: string | null
+          usda_food_id: string | null
           id: string
           recipe_id: string | null
           user_id: string
@@ -57,7 +57,7 @@ export type Database = {
         Insert: {
           created_at?: string
           custom_food_id?: string | null
-          edamam_food_id?: string | null
+          usda_food_id?: string | null
           id?: string
           recipe_id?: string | null
           user_id: string
@@ -65,7 +65,7 @@ export type Database = {
         Update: {
           created_at?: string
           custom_food_id?: string | null
-          edamam_food_id?: string | null
+          usda_food_id?: string | null
           id?: string
           recipe_id?: string | null
           user_id?: string
@@ -92,7 +92,7 @@ export type Database = {
           consumed_at: string
           created_at: string
           custom_food_id: string | null
-          edamam_food_id: string | null
+          usda_food_id: string | null
           id: string
           recipe_id: string | null
           serving_size: number
@@ -103,7 +103,7 @@ export type Database = {
           consumed_at?: string
           created_at?: string
           custom_food_id?: string | null
-          edamam_food_id?: string | null
+          usda_food_id?: string | null
           id?: string
           recipe_id?: string | null
           serving_size: number
@@ -114,7 +114,7 @@ export type Database = {
           consumed_at?: string
           created_at?: string
           custom_food_id?: string | null
-          edamam_food_id?: string | null
+          usda_food_id?: string | null
           id?: string
           recipe_id?: string | null
           serving_size?: number
@@ -170,7 +170,7 @@ export type Database = {
           amount: number
           created_at: string
           custom_food_id: string | null
-          edamam_food_id: string | null
+          usda_food_id: string | null
           id: string
           recipe_id: string
           unit: string
@@ -179,7 +179,7 @@ export type Database = {
           amount: number
           created_at?: string
           custom_food_id?: string | null
-          edamam_food_id?: string | null
+          usda_food_id?: string | null
           id?: string
           recipe_id: string
           unit: string
@@ -188,7 +188,7 @@ export type Database = {
           amount?: number
           created_at?: string
           custom_food_id?: string | null
-          edamam_food_id?: string | null
+          usda_food_id?: string | null
           id?: string
           recipe_id?: string
           unit?: string

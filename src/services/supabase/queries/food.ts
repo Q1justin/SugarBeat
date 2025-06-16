@@ -1,9 +1,8 @@
-import { supabase } from './supabase';
-import { Database } from '../types/supabase';
+import { supabase } from '../client';
+import { Database } from '../../../types/supabase';
 
 // Type definitions for better autocomplete and type safety
 type CustomFood = Database['public']['Tables']['custom_foods']['Row'];
-type Recipe = Database['public']['Tables']['recipes']['Row'];
 type FoodEntry = Database['public']['Tables']['food_entries']['Row'];
 
 // Get all food entries for a user on a specific date
@@ -71,35 +70,6 @@ export async function logFoodEntry(
     })
     .select()
     .single();
-
-  if (error) throw error;
-  return data;
-}
-
-// Get shared recipes from friends
-export async function getFriendsSharedRecipes(userId: string) {
-  const { data, error } = await supabase
-    .from('recipes')
-    .select(`
-      *,
-      recipe_ingredients (
-        amount,
-        unit,
-        custom_foods (*),
-        edamam_food_id
-      )
-    `)
-    .eq('is_shared', true)
-    .filter('user_id', 'in', (
-      supabase
-        .from('friend_connections')
-        .select('addressee_id, requester_id')
-        .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-        .eq('status', 'accepted')
-    ).select(`case 
-      when requester_id = '${userId}' then addressee_id 
-      else requester_id 
-      end`));
 
   if (error) throw error;
   return data;

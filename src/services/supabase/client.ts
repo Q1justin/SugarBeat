@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto'; //Polyfill to provide modern functionality to older envs that don't support react native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/supabase';
+import { Database } from '../../types/supabase';
 
 // Ensure the environment variables are set
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;

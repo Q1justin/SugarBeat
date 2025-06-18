@@ -1,37 +1,39 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Alert } from 'react-native';
-import { getFoodEntriesByDate } from './src/services/supabase/queries/food';
-import { signInWithEmail, getCurrentUser } from './src/services/supabase/auth';
+import { StyleSheet, View, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { LoginScreen } from './src/screens/auth/LoginScreen';
+import { getCurrentUser } from './src/services/supabase/auth';
+import { HomeScreen } from './src/screens/home/HomeScreen';
 
-export default function App() {  const handleTestPress = async () => {
+export default function App() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkUser();
+  }, [user]);
+
+  const checkUser = async () => {
     try {
-      // First try to sign in
-      await signInWithEmail('q1justindok@gmail.com', 'justlikeQ1');
-      
       const user = await getCurrentUser();
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-      const userId = user.id;
-      const entries = await getFoodEntriesByDate(userId, new Date());
-
-      Alert.alert(
-        'Query Results', 
-        `Found ${entries.length} entries\n\nCheck console for full details`
-      );
-    } catch (error: any) {
-      console.error('Error:', error);
-      Alert.alert('Error', error.message || 'Failed to fetch food entries');
-    }
+      setUser(user);
+    } catch (error) {
+      console.error('Error checking auth state:', error);
+    };
+    setLoading(false);
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text>SugarBeat App</Text>
-      <Button 
-        title="TEST Endpoint"
-        onPress={handleTestPress}
-      />
+      {user ? <HomeScreen /> : <LoginScreen />}
       <StatusBar style="auto" />
     </View>
   );

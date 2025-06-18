@@ -10,12 +10,13 @@
     "update-types": "supabase gen types typescript --project-id qqglnlbkktjtuqruiosn > src/types/supabase.ts"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@supabase/supabase-js": "^2.50.0",
     "expo": "~53.0.11",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.3"
+    "react-native": "0.79.3",
+    "react-native-url-polyfill": "^2.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

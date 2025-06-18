@@ -5,7 +5,6 @@ export async function signInWithEmail(email: string, password: string) {
     email,
     password,
   });
-  console.log(data)
   
   if (error) throw error;
   return data;
@@ -22,10 +21,17 @@ export async function signUpWithEmail(email: string, password: string) {
 }
 
 export async function getCurrentUser() {
-    // auth token is automatically fetched from AsyncStorage
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return data.user;
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        return user;
+    } catch (error) {
+        // Session missing is expected after logout
+        if (error instanceof Error && error.message.includes('Auth session missing')) {
+            return null;
+        }
+        // Re-throw unexpected errors
+        throw error;
+    }
 }
 
 export async function signOut() {

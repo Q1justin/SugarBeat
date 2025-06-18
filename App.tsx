@@ -4,14 +4,12 @@ import { useEffect, useState } from 'react';
 import { LoginScreen } from './src/screens/auth/LoginScreen';
 import { getCurrentUser } from './src/services/supabase/auth';
 import { HomeScreen } from './src/screens/home/HomeScreen';
+import { supabase } from './src/services/supabase/client';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkUser();
-  }, [user]);
 
   const checkUser = async () => {
     try {
@@ -19,9 +17,31 @@ export default function App() {
       setUser(user);
     } catch (error) {
       console.error('Error checking auth state:', error);
-    };
-    setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    checkUser(); // Only run once on mount
+  }, []);
+
+  // Listen for auth state changes like login/logout
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      // event is string like 'SIGNED_IN', 'SIGNED_OUT', etc.
+      // sesssion is the current session object
+      (event: AuthChangeEvent, session: Session | null) => {
+        // Set user if there is one
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      // Clean up function to stop listening to auth changes
+      subscription.unsubscribe();
+    };
+  }, []);
 
   if (loading) {
     return (

@@ -26,7 +26,6 @@ export const HomeScreen = () => {
 
   const handleSignOut = async () => {
     try {
-        console.log("Clicked")
       await signOut();
       // App.tsx will automatically update the UI
     } catch (error: any) {
@@ -36,7 +35,7 @@ export const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Test Screen</Text>
+      <Text style={styles.title}>Home Screen</Text>
       <View style={styles.buttonContainer}>
         <Button 
           title="Test Food Entries"

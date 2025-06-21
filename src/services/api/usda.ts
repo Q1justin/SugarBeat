@@ -1,6 +1,6 @@
 // USDA FoodData Central API configuration
 const USDA_API_KEY = process.env.EXPO_PUBLIC_USDA_API_KEY;
-const BASE_URL = 'https://api.nal.usda.gov/fdc/v1';
+const BASE_URL = process.env.EXPO_PUBLIC_USDA_URL;
 
 // Types for the API response
 export type NutrientInfo = {
@@ -45,11 +45,7 @@ const NUTRIENT_IDS = {
  * @param pageSize Number of results per page (default: 50)
  * @param pageNumber Page number (default: 1)
  */
-export async function searchFoods(
-  query: string,
-  pageSize: number = 50,
-  pageNumber: number = 1
-): Promise<FoodItem[]> {
+export async function searchFoods(query: string, pageSize: number = 50, pageNumber: number = 1): Promise<FoodItem[]> {
   if (!USDA_API_KEY) {
     throw new Error('Missing USDA API key. Please check your environment variables.');
   }
@@ -76,8 +72,7 @@ export async function searchFoods(
  * @param food The food item from USDA API
  */
 export function extractSugarInfo(food: FoodItem) {
-  const findNutrient = (nutrientId: number) => 
-    food.foodNutrients.find(n => n.nutrientId === nutrientId)?.value ?? 0;
+  const findNutrient = (nutrientId: number) => food.foodNutrients.find(n => n.nutrientId === nutrientId)?.value ?? 0;
 
   return {
     description: food.description,

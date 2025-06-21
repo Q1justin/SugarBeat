@@ -12,8 +12,12 @@ import { Text, FAB, Card, ProgressBar } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { signOut } from '../../services/supabase/auth';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../App';
 
-export const HomeScreen = () => {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+export const HomeScreen = ({ navigation }: Props) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -140,10 +144,7 @@ export const HomeScreen = () => {
         <FAB
           icon="plus"
           style={styles.fab}
-          onPress={() => {
-            // TODO: Navigate to Add Food screen
-            console.log('Add food');
-          }}
+          onPress={() => navigation.navigate('SearchFood')}
         />
       </View>
     </SafeAreaView>

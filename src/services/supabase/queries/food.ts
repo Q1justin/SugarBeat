@@ -6,7 +6,7 @@ type CustomFood = Database['public']['Tables']['custom_foods']['Row'];
 type FoodEntry = Database['public']['Tables']['food_entries']['Row'];
 
 // Get all food entries for a user on a specific date
-export async function getFoodEntriesByDate(userId: string, date: Date) {
+export async function getFoodEntriesByDate(userId: string, date: Date): Promise<FoodEntry []> {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   

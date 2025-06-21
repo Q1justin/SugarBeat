@@ -92,7 +92,7 @@ export const SearchFoodScreen = ({ navigation }: Props) => {
                                 title={item.description}
                                 description={item.foodCategory}
                                 onPress={() => {
-                                    console.log('Selected food:', item);
+                                    navigation.navigate('FoodPage', { food: item });
                                 }}
                                 titleStyle={styles.itemTitle}
                                 descriptionStyle={styles.itemDescription}

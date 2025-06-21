@@ -12,12 +12,18 @@ import { HomeScreen } from './src/screens/home/HomeScreen';
 import { supabase } from './src/services/supabase/client';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { SearchFoodScreen } from './src/screens/food/SearchFoodScreen';
+import { FoodPage } from './src/screens/food/FoodPage';
+import type { FoodItem } from './src/services/api/usda';
 
 // Screens on this app
 export type RootStackParamList = {
     Login: undefined; // undefined means no params are expected
     Home: undefined;
     SearchFood: undefined;
+    FoodPage: {
+        food: FoodItem;  // The food item to display
+        isLoggedFood?: boolean; // Whether this is a food that was already logged
+    };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -127,6 +133,18 @@ export default function App() {
                                         title: 'Add Food',
                                         headerShadowVisible: false,
                                         presentation: 'modal',
+                                        headerStyle: {
+                                            backgroundColor: colors.cardBackground,
+                                        },
+                                        headerTintColor: colors.text.primary,
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="FoodPage" 
+                                    component={FoodPage}
+                                    options={{
+                                        headerShown: true,
+                                        headerShadowVisible: false,
                                         headerStyle: {
                                             backgroundColor: colors.cardBackground,
                                         },

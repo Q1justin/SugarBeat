@@ -14,6 +14,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { signOut } from '../../services/supabase/auth';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
+import { colors } from '../../theme/colors';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -64,15 +65,15 @@ export const HomeScreen = ({ navigation }: Props) => {
                         style={styles.dateSection}
                         onPress={() => setShowDatePicker(true)}
                     >
-                        <MaterialCommunityIcons name="calendar" size={24} color="#2563eb" />
+                        <MaterialCommunityIcons name="calendar" size={24} color={colors.primary} />
                         <Text style={styles.dateText}>{formatDate(selectedDate)}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleSignOut}>
-                        <MaterialCommunityIcons name="logout" size={24} color="#ef4444" />
+                        <MaterialCommunityIcons name="logout" size={24} color={colors.error} />
                     </TouchableOpacity>
                 </View>
 
-                {/* Date Picker Modal for both platforms */}
+                {/* Date Picker Modal */}
                 {showDatePicker && (
                     <Modal
                         transparent={true}
@@ -92,50 +93,57 @@ export const HomeScreen = ({ navigation }: Props) => {
                                     </TouchableOpacity>
                                 </View>
                                 <DateTimePicker
-                                value={selectedDate}
-                                mode="date"
-                                display="inline"
-                                onChange={onDateChange}
+                                    value={selectedDate}
+                                    mode="date"
+                                    display="inline"
+                                    onChange={onDateChange}
+                                    accentColor={colors.primary}
                                 />
                             </View>
                         </View>
                     </Modal>
                 )}
 
-                <ScrollView style={styles.scrollView}>
+                <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                     {/* Goals Section */}
-                    <Card style={styles.card}>
-                        <Card.Title title="Daily Sugar Goal" />
-                        <Card.Content>
+                    <Card style={styles.card} mode="elevated">
+                        <Card.Title 
+                            title="Daily Sugar Goal" 
+                            titleStyle={styles.cardTitle}
+                        />
+                        <Card.Content style={styles.cardContent}>
                             <View style={styles.goalStats}>
                                 <Text style={styles.intakeText}>
-                                {currentIntake}g / {dailyGoal}g
+                                    {currentIntake}g / {dailyGoal}g
                                 </Text>
                                 <Text style={styles.remainingText}>
-                                {dailyGoal - currentIntake}g remaining
+                                    {dailyGoal - currentIntake}g remaining
                                 </Text>
                             </View>
                             <ProgressBar
                                 progress={progressPercentage}
-                                color={progressPercentage >= 1 ? '#ef4444' : '#2563eb'}
+                                color={progressPercentage >= 1 ? colors.error : colors.progressGood}
                                 style={styles.progressBar}
                             />
                         </Card.Content>
                     </Card>
 
                     {/* Food Logs Section */}
-                    <Card style={styles.card}>
-                        <Card.Title title="Today's Food Log" />
-                        <Card.Content>
-                        {dummyFoodLogs.map((log) => (
-                            <View key={log.id} style={styles.foodLogItem}>
-                            <View>
-                                <Text style={styles.foodName}>{log.name}</Text>
-                                <Text style={styles.foodTime}>{log.time}</Text>
-                            </View>
-                            <Text style={styles.sugarAmount}>{log.sugar}g sugar</Text>
-                            </View>
-                        ))}
+                    <Card style={styles.card} mode="elevated">
+                        <Card.Title 
+                            title="Today's Food Log" 
+                            titleStyle={styles.cardTitle}
+                        />
+                        <Card.Content style={styles.cardContent}>
+                            {dummyFoodLogs.map((log) => (
+                                <View key={log.id} style={styles.foodLogItem}>
+                                    <View>
+                                        <Text style={styles.foodName}>{log.name}</Text>
+                                        <Text style={styles.foodTime}>{log.time}</Text>
+                                    </View>
+                                    <Text style={styles.sugarAmount}>{log.sugar}g sugar</Text>
+                                </View>
+                            ))}
                         </Card.Content>
                     </Card>
                 </ScrollView>
@@ -145,6 +153,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                     icon="plus"
                     style={styles.fab}
                     onPress={() => navigation.navigate('SearchFood')}
+                    color={colors.text.inverse}
                 />
             </View>
         </SafeAreaView>
@@ -154,85 +163,119 @@ export const HomeScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background,
     },
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
-        paddingTop: 0,
+        backgroundColor: colors.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        backgroundColor: '#fff',
+        backgroundColor: colors.cardBackground,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     dateSection: {
         flexDirection: 'row',
         alignItems: 'center',
+        padding: 8,
+        borderRadius: 8,
     },
     dateText: {
         fontSize: 18,
         fontWeight: '600',
         marginLeft: 8,
-        color: '#1f2937',
+        color: colors.text.primary,
     },
     scrollView: {
         flex: 1,
     },
+    scrollContent: {
+        paddingVertical: 8,
+    },
     card: {
         margin: 16,
         marginBottom: 8,
+        backgroundColor: colors.cardBackground,
+        borderRadius: 12,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    cardTitle: {
+        color: colors.text.primary,
+        fontSize: 20,
+        fontWeight: '600',
+    },
+    cardContent: {
+        backgroundColor: colors.cardBackground,
     },
     goalStats: {
-        marginBottom: 8,
+        marginBottom: 12,
+        padding: 16,
+        borderRadius: 8,
     },
     intakeText: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.text.primary,
     },
     remainingText: {
-        fontSize: 14,
-        color: '#6b7280',
+        fontSize: 16,
+        color: colors.text.secondary,
         marginTop: 4,
     },
     progressBar: {
-        height: 8,
-        borderRadius: 4,
+        height: 10,
+        borderRadius: 5,
     },
     foodLogItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 12,
+        paddingHorizontal: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.divider,
+        backgroundColor: colors.cardBackground,
     },
     foodName: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#1f2937',
+        color: colors.text.primary,
     },
     foodTime: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 2,
     },
     sugarAmount: {
         fontSize: 16,
-        fontWeight: '500',
-        color: '#2563eb',
+        fontWeight: '600',
+        color: colors.primary,
     },
     fab: {
         position: 'absolute',
         margin: 16,
         right: 0,
         bottom: 0,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primary,
+        borderRadius: 28,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     modalOverlay: {
         flex: 1,
@@ -241,11 +284,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        backgroundColor: 'white',
-        borderRadius: 12,
+        backgroundColor: colors.modalBackground,
+        borderRadius: 16,
         padding: 20,
         width: '90%',
         maxWidth: 400,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -254,15 +302,16 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     modalTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.text.primary,
     },
     modalCloseButton: {
         padding: 8,
+        borderRadius: 8,
     },
     modalCloseText: {
-        color: '#2563eb',
+        color: colors.primary,
         fontSize: 16,
         fontWeight: '500',
     },

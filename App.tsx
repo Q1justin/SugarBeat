@@ -3,7 +3,9 @@ import { StyleSheet, View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme, adaptNavigationTheme } from 'react-native-paper';
+import { DefaultTheme as NavigationDefaultTheme } from '@react-navigation/native';
+import { colors } from './src/theme/colors';
 import { LoginScreen } from './src/screens/auth/LoginScreen';
 import { getCurrentUser } from './src/services/supabase/auth';
 import { HomeScreen } from './src/screens/home/HomeScreen';
@@ -19,6 +21,43 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// Paper theme
+const theme = {
+    ...MD3LightTheme,
+    colors: {
+        ...MD3LightTheme.colors,
+        primary: colors.primary,
+        primaryContainer: colors.primaryLight,
+        background: colors.background,
+        surface: colors.cardBackground,
+        surfaceVariant: colors.modalBackground,
+        error: colors.error,
+        onSurface: colors.text.primary,
+        onSurfaceVariant: colors.text.secondary,
+        elevation: {
+            level0: colors.background,
+            level1: colors.cardBackground,
+            level2: colors.cardBackground,
+            level3: colors.cardBackground,
+            level4: colors.cardBackground,
+            level5: colors.cardBackground,
+        },
+    },
+};
+
+const navigationTheme = {
+    ...NavigationDefaultTheme,
+    dark: false,
+    colors: {
+        ...NavigationDefaultTheme.colors,
+        primary: colors.primary,
+        background: colors.background,
+        card: colors.cardBackground,
+        text: colors.text.primary,
+        border: colors.border,
+    },
+};
 
 export default function App() {
     const [user, setUser] = useState<any>(null);
@@ -59,50 +98,66 @@ export default function App() {
     if (loading) {
         return (
             <View style={styles.container}>
-            <Text>Loading...</Text>
+                <Text style={styles.loadingText}>Loading...</Text>
             </View>
         );
     }
 
     return (
-        <NavigationContainer>
-            <PaperProvider>
-                <Stack.Navigator 
-                    initialRouteName={user ? 'Home' : 'Login'}
-                    screenOptions={{
-                        headerShown: false,
-                    }}
-                >
-                    {user ? (
-                        <>
-                            <Stack.Screen name="Home" component={HomeScreen} />
-                            <Stack.Screen 
-                                name="SearchFood" 
-                                component={SearchFoodScreen}
-                                options={{
-                                headerShown: true,
-                                title: 'Add Food',
-                                headerShadowVisible: false,
-                                presentation: 'modal',
-                                headerStyle: {
-                                    backgroundColor: '#fff',
-                                },
-                                }}
-                            />
-                        </>
-                    ) : (
-                        <Stack.Screen name="Login" component={LoginScreen} />
-                    )}
-                </Stack.Navigator>
+        <NavigationContainer theme={navigationTheme}>
+            <PaperProvider theme={theme}>
+                <View style={styles.appContainer}>
+                    <Stack.Navigator 
+                        initialRouteName={user ? "Home" : "Login"}
+                        screenOptions={{
+                            headerShown: false,
+                            contentStyle: {
+                                backgroundColor: colors.background,
+                            }
+                        }}
+                    >
+                        {user ? (
+                            <>
+                                <Stack.Screen name="Home" component={HomeScreen} />
+                                <Stack.Screen 
+                                    name="SearchFood" 
+                                    component={SearchFoodScreen}
+                                    options={{
+                                        headerShown: true,
+                                        title: 'Add Food',
+                                        headerShadowVisible: false,
+                                        presentation: 'modal',
+                                        headerStyle: {
+                                            backgroundColor: colors.cardBackground,
+                                        },
+                                        headerTintColor: colors.text.primary,
+                                    }}
+                                />
+                            </>
+                        ) : (
+                            <Stack.Screen name="Login" component={LoginScreen} />
+                        )}
+                    </Stack.Navigator>
+                </View>
             </PaperProvider>
-        <StatusBar style="auto" />
-    </NavigationContainer>
-  );
+            <StatusBar style="dark" backgroundColor={colors.background} />
+        </NavigationContainer>
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    appContainer: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+    loadingText: {
+        color: colors.text.primary,
+        fontSize: 18,
     },
 });

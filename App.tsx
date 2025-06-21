@@ -13,7 +13,7 @@ import { supabase } from './src/services/supabase/client';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { SearchFoodScreen } from './src/screens/food/SearchFoodScreen';
 import { FoodPage } from './src/screens/food/FoodPage';
-import type { FoodItem } from './src/services/api/usda';
+import type { FoodItem } from './src/services/api/edamam';
 
 // Screens on this app
 export type RootStackParamList = {

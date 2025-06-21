@@ -3,17 +3,19 @@ import {
     View,
     StyleSheet,
     SafeAreaView,
+    Image,
+    TouchableWithoutFeedback,
+    Keyboard,
 } from 'react-native';
-import { Text, Card, TextInput, Button, Menu } from 'react-native-paper';
+import { Text, Card, TextInput, Button, Menu, FAB } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
-import type { FoodItem } from '../../services/api/usda';
+import type { FoodItem } from '../../services/api/edamam';
 
-const getNutrientValue = (food: FoodItem, nutrientId: number): number => {
-    const nutrient = food.foodNutrients.find(n => n.nutrientId === nutrientId);
-    return nutrient?.value ?? 0;
+const getNutrientValue = (food: FoodItem, nutrientKey: keyof typeof food.nutrients): number => {
+    return food.nutrients[nutrientKey]?.quantity ?? 0;
 };
 
 const NutrientRow = ({ label, value, unit }: { label: string; value: number; unit: string }) => (
@@ -30,7 +32,7 @@ const SERVING_UNITS = [
     { value: 'oz', label: 'oz' },
     { value: 'cup', label: 'cup' },
     { value: 'tbsp', label: 'tbsp' }
-];
+] as const;
 
 type ServingUnit = typeof SERVING_UNITS[number]['value'];
 
@@ -38,11 +40,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'FoodPage'>;
 
 export const FoodPage = ({ route, navigation }: Props) => {
     const { food } = route.params;
-    console.log("FOOD")
-    console.log(food)
     const [servingSize, setServingSize] = useState(food.servingSize?.toString() ?? '100');
     const [servingUnit, setServingUnit] = useState<ServingUnit>(
-        food.servingSizeUnit as ServingUnit ?? 'g'
+        (food.servingSizeUnit as ServingUnit) ?? 'g'
     );
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -54,88 +54,120 @@ export const FoodPage = ({ route, navigation }: Props) => {
         setServingSize(filtered);
     };
 
+    const handleFoodLog = () => {
+
+    }
+
     return (
-        <SafeAreaView style={styles.container}>
-            <Card style={styles.card}>
-                <Card.Title
-                    title={food.description}
-                    subtitle={food.foodCategory}
-                    titleStyle={styles.title}
-                    subtitleStyle={styles.subtitle}
-                />
-                <Card.Content>
-                    {/* Serving Size Input Section */}
-                    <View style={styles.servingSection}>
-                        <Text style={styles.sectionTitle}>Serving Size</Text>
-                        <View style={styles.servingInputRow}>
-                            <TextInput
-                                mode="outlined"
-                                value={servingSize}
-                                onChangeText={handleServingSizeChange}
-                                keyboardType="decimal-pad"
-                                style={styles.servingSizeInput}
-                                outlineStyle={styles.inputOutline}
-                            />
-                            <View>
-                                <Button
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <SafeAreaView style={styles.container}>
+                <Card style={styles.card}>
+                    <Card.Title
+                        title={food.label}
+                        subtitle={food.category}
+                        titleStyle={styles.title}
+                        subtitleStyle={styles.subtitle}
+                        left={props => 
+                            food.image ? (
+                                <Image 
+                                    source={{ uri: food.image }} 
+                                    style={styles.foodImage} 
+                                />
+                            ) : null
+                        }
+                    />
+                    <Card.Content>
+                        <View style={styles.servingSection}>
+                            <Text style={styles.sectionTitle}>Serving Size</Text>
+                            <View style={styles.servingInputRow}>
+                                <TextInput
                                     mode="outlined"
-                                    onPress={() => setMenuVisible(true)}
-                                    style={styles.unitButton}
-                                    contentStyle={styles.unitButtonContent}
-                                    onLayout={(event) => {
-                                        const { x, y, width, height } = event.nativeEvent.layout;
-                                        setButtonLayout({ x, y, width, height });
-                                    }}
-                                >
-                                    {servingUnit}
-                                    <MaterialIcons 
-                                        name="arrow-drop-down" 
-                                        size={24} 
-                                        color={colors.text.primary}
-                                        style={{ marginLeft: 4 }}
-                                    />
-                                </Button>
-                                <Menu
-                                    visible={menuVisible}
-                                    onDismiss={() => setMenuVisible(false)}
-                                    anchor={buttonLayout}
-                                >
-                                    {SERVING_UNITS.map((unit) => (
-                                        <Menu.Item
-                                            key={unit.value}
-                                            onPress={() => {
-                                                setServingUnit(unit.value);
-                                                setMenuVisible(false);
-                                            }}
-                                            title={unit.label}
+                                    value={servingSize}
+                                    onChangeText={handleServingSizeChange}
+                                    keyboardType="decimal-pad"
+                                    style={styles.servingSizeInput}
+                                    outlineStyle={styles.inputOutline}
+                                    returnKeyType="done"
+                                    onSubmitEditing={Keyboard.dismiss}
+                                />
+                                <View>
+                                    <Button
+                                        mode="outlined"
+                                        onPress={() => setMenuVisible(true)}
+                                        style={styles.unitButton}
+                                        contentStyle={styles.unitButtonContent}
+                                        onLayout={(event) => {
+                                            const { x, y, width, height } = event.nativeEvent.layout;
+                                            setButtonLayout({ x, y, width, height });
+                                        }}
+                                    >
+                                        {servingUnit}
+                                        <MaterialIcons 
+                                            name="arrow-drop-down" 
+                                            size={24} 
+                                            color={colors.text.primary}
+                                            style={{ marginLeft: 4 }}
                                         />
-                                    ))}
-                                </Menu>
+                                    </Button>
+                                    <Menu
+                                        visible={menuVisible}
+                                        onDismiss={() => setMenuVisible(false)}
+                                        anchor={buttonLayout}
+                                    >
+                                        {SERVING_UNITS.map((unit) => (
+                                            <Menu.Item
+                                                key={unit.value}
+                                                onPress={() => {
+                                                    setServingUnit(unit.value);
+                                                    setMenuVisible(false);
+                                                }}
+                                                title={unit.label}
+                                            />
+                                        ))}
+                                    </Menu>
+                                </View>
                             </View>
                         </View>
-                    </View>
 
-                    <View style={styles.nutrientSection}>
-                        <NutrientRow label="Total Sugars" value={getNutrientValue(food, 2000)} unit="g" />
-                        <NutrientRow label="Added Sugars" value={getNutrientValue(food, 1235)} unit="g" />
-                        <NutrientRow label="Calories" value={getNutrientValue(food, 1008)} unit="kcal" />
-                        <NutrientRow label="Carbohydrates" value={getNutrientValue(food, 1005)} unit="g" />
-                        <NutrientRow label="Protein" value={getNutrientValue(food, 1003)} unit="g" />
-                        <NutrientRow label="Fat" value={getNutrientValue(food, 1004)} unit="g" />
-                    </View>
-
-                    {/* Log Food Button */}
-                    <Button
-                        mode="contained"
-                        onPress={() => console.log('Log food pressed')}
-                        style={styles.logButton}
-                        contentStyle={styles.logButtonContent}
-                    >
-                        Log Food
-                    </Button>
-                </Card.Content>
-            </Card>
-        </SafeAreaView>
+                        {/* Nutrition Facts Section */}
+                        <View style={styles.nutrientSection}>
+                            <Text style={styles.sectionTitle}>Nutrition Facts</Text>
+                            <NutrientRow 
+                                label="Total Sugars" 
+                                value={getNutrientValue(food, 'SUGAR')} 
+                                unit="g" 
+                            />
+                            <NutrientRow 
+                                label="Calories" 
+                                value={getNutrientValue(food, 'ENERC_KCAL')} 
+                                unit="kcal" 
+                            />
+                            <NutrientRow 
+                                label="Carbohydrates" 
+                                value={getNutrientValue(food, 'CHOCDF')} 
+                                unit="g" 
+                            />
+                            <NutrientRow 
+                                label="Protein" 
+                                value={getNutrientValue(food, 'PROCNT')} 
+                                unit="g" 
+                            />
+                            <NutrientRow 
+                                label="Fat" 
+                                value={getNutrientValue(food, 'FAT')} 
+                                unit="g" 
+                            />
+                        </View>
+                    </Card.Content>
+                </Card>
+                <FAB
+                    icon="plus"
+                    style={styles.fab}
+                    onPress={handleFoodLog}
+                    color={colors.text.inverse}
+                />
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
     );
 };
 
@@ -143,28 +175,33 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+        padding: 16,
     },
     card: {
-        margin: 16,
         backgroundColor: colors.cardBackground,
+        elevation: 2,
     },
     title: {
-        color: colors.text.primary,
         fontSize: 20,
-        fontWeight: '600',
+        color: colors.text.primary,
     },
     subtitle: {
-        color: colors.text.secondary,
         fontSize: 14,
+        color: colors.text.secondary,
+    },
+    foodImage: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
     },
     servingSection: {
         marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
         color: colors.text.primary,
-        marginBottom: 8,
+        marginBottom: 12,
     },
     servingInputRow: {
         flexDirection: 'row',
@@ -173,7 +210,6 @@ const styles = StyleSheet.create({
     },
     servingSizeInput: {
         flex: 1,
-        maxWidth: 100,
         backgroundColor: colors.cardBackground,
     },
     inputOutline: {
@@ -181,47 +217,39 @@ const styles = StyleSheet.create({
     },
     unitButton: {
         borderColor: colors.border,
-        minWidth: 100,
-        height: 56, // Match TextInput height
     },
     unitButtonContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-    },
-    menuContent: {
-        backgroundColor: colors.cardBackground,
-    },
-    menuItemTitle: {
-        color: colors.text.primary,
     },
     nutrientSection: {
-        marginTop: 16,
+        gap: 8,
     },
     nutrientRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.divider,
+        paddingVertical: 4,
     },
     nutrientLabel: {
-        color: colors.text.primary,
         fontSize: 16,
+        color: colors.text.primary,
     },
     nutrientValue: {
-        color: colors.text.primary,
         fontSize: 16,
-        fontWeight: '500',
+        color: colors.text.secondary,
     },
-    logButton: {
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
         backgroundColor: colors.primary,
-        borderRadius: 8,
-        marginTop: 8,
-    },
-    logButtonContent: {
-        paddingVertical: 8,
+        borderRadius: 28,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
 });

@@ -5,9 +5,10 @@ import {
     SafeAreaView,
     FlatList,
     ActivityIndicator,
+    Image,
 } from 'react-native';
 import { Searchbar, List, Text, IconButton } from 'react-native-paper';
-import { searchFoods, type FoodItem } from '../../services/api/usda';
+import { searchFoods, type FoodItem } from '../../services/api/edamam';
 import { colors } from '../../theme/colors';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
@@ -27,6 +28,7 @@ export const SearchFoodScreen = ({ navigation }: Props) => {
         setError(null);
         try {
             const results = await searchFoods(searchQuery);
+            console.log(results[0])
             setFoods(results);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to search foods');
@@ -34,20 +36,6 @@ export const SearchFoodScreen = ({ navigation }: Props) => {
             setLoading(false);
         }
     };
-
-    const renderFoodItem = ({ item }: { item: FoodItem }) => (
-        <List.Item
-            title={item.description}
-            description={item.foodCategory}
-            onPress={() => {
-            // TODO: Navigate to food details screen
-            console.log('Selected food:', item);
-            }}
-            right={props => (
-            <List.Icon {...props} icon="chevron-right" />
-            )}
-        />
-    );
 
     return (
         <SafeAreaView style={styles.container}>
@@ -89,20 +77,32 @@ export const SearchFoodScreen = ({ navigation }: Props) => {
                         data={foods}
                         renderItem={({ item }) => (
                             <List.Item
-                                title={item.description}
-                                description={item.foodCategory}
+                                title={item.label}
+                                description={item.category}
                                 onPress={() => {
                                     navigation.navigate('FoodPage', { food: item });
                                 }}
                                 titleStyle={styles.itemTitle}
                                 descriptionStyle={styles.itemDescription}
                                 style={styles.listItem}
+                                left={props => 
+                                    item.image ? (
+                                        <View style={styles.imageContainer}>
+                                            <Image 
+                                                source={{ uri: item.image }} 
+                                                style={styles.foodImage}
+                                            />
+                                        </View>
+                                    ) : (
+                                        <List.Icon {...props} icon="food" />
+                                    )
+                                }
                                 right={props => (
                                     <List.Icon {...props} icon="chevron-right" color={colors.primary} />
                                 )}
                             />
                         )}
-                        keyExtractor={item => item.fdcId.toString()}
+                        keyExtractor={item => `${item.foodId}_${item.label}`}
                         contentContainerStyle={styles.list}
                         ItemSeparatorComponent={() => <View style={styles.separator} />}
                     />
@@ -187,5 +187,18 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: 8,
+    },
+    imageContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginRight: 12,
+        backgroundColor: colors.cardBackground,
+    },
+    foodImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
 });

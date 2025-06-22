@@ -168,7 +168,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                             {foodLogs.map((log) => (
                                 <View key={log.id} style={styles.foodLogItem}>
                                     <View>
-                                        <Text style={styles.foodName}>{log.name}</Text>
+                                        <Text style={styles.foodName}>{log.name.length >= 30 ? `${log.name.slice(0, 30)}...` : log.name}</Text>
                                         <Text style={styles.foodTime}>{log.time}</Text>
                                     </View>
                                     <Text style={styles.sugarAmount}>{log.sugar}g sugar</Text>

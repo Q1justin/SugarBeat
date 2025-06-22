@@ -26,25 +26,20 @@ const NutrientRow = ({ label, value, unit }: { label: string; value: number; uni
     </View>
 );
 
-// Common serving units
-const SERVING_UNITS = [
-    { value: 'g', label: 'g' },
-    { value: 'ml', label: 'ml' },
-    { value: 'oz', label: 'oz' },
-    { value: 'cup', label: 'cup' },
-    { value: 'tbsp', label: 'tbsp' }
-] as const;
-
-type ServingUnit = typeof SERVING_UNITS[number]['value'];
+const SERVING_UNITS = {
+    'Gram': 'g',
+    'Milliliter': 'ml',
+    'Ounce': 'oz',
+    'Cup': 'cup',
+    'Tablespoon': 'tbsp',
+} as const;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FoodPage'>;
 
 export const FoodPage = ({ route, navigation }: Props) => {
     const { food, isLoggedFood, user } = route.params;
-    const [servingSize, setServingSize] = useState(food.servingSize?.toString() ?? '100');
-    const [servingUnit, setServingUnit] = useState<ServingUnit>(
-        (food.servingSizeUnit as ServingUnit) ?? 'g'
-    );
+    const [servingSize, setServingSize] = useState(food?.servingSizes[0].quantity.toString() ?? food.servingSize?.toString() ?? '100');
+    const [servingUnit, setServingUnit] = useState(food?.servingSizes[0].label ?? 'g');
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
@@ -77,6 +72,15 @@ export const FoodPage = ({ route, navigation }: Props) => {
             // Optionally show an error message to the user
         });
     }
+
+    const getStandardUnit = (apiUnit: string): string => {
+        // Find the matching key (case-insensitive)
+        const match = Object.entries(SERVING_UNITS).find(
+            ([key]) => key.toLowerCase() === apiUnit.toLowerCase()
+        );
+        // Return the abbreviated value if found, otherwise return original
+        return match ? match[1] : apiUnit;
+    };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -121,7 +125,7 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                             setButtonLayout({ x, y, width, height });
                                         }}
                                     >
-                                        {servingUnit}
+                                        {getStandardUnit(servingUnit) ?? servingUnit}
                                         <MaterialIcons 
                                             name="arrow-drop-down" 
                                             size={24} 
@@ -134,11 +138,11 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                         onDismiss={() => setMenuVisible(false)}
                                         anchor={buttonLayout}
                                     >
-                                        {SERVING_UNITS.map((unit) => (
+                                        {food?.servingSizes.map((unit) => (
                                             <Menu.Item
-                                                key={unit.value}
+                                                key={unit.label}
                                                 onPress={() => {
-                                                    setServingUnit(unit.value);
+                                                    setServingUnit(unit.label);
                                                     setMenuVisible(false);
                                                 }}
                                                 title={unit.label}

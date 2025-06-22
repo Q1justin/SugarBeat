@@ -38,8 +38,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'FoodPage'>;
 
 export const FoodPage = ({ route, navigation }: Props) => {
     const { food, isLoggedFood, user } = route.params;
-    const [servingSize, setServingSize] = useState(food?.servingSizes[0].quantity.toString() ?? food.servingSize?.toString() ?? '100');
-    const [servingUnit, setServingUnit] = useState(food?.servingSizes[0].label ?? 'g');
+    const [servingSize, setServingSize] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].quantity.toString() : food.servingSize?.toString());
+    const [servingUnit, setServingUnit] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].label : food.servingSizeUnit || 'g');
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
 

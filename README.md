@@ -4,7 +4,7 @@ A React Native app to help people track and reduce their added sugar consumption
 
 ## Features
 - Track daily added sugar intake
-- Search food items using USDA API
+- Search food items using Edamam API
 - Create and share custom food items and recipes
 - Connect with friends and share recipes
 - Set and track sugar intake goals

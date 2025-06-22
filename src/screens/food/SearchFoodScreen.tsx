@@ -15,7 +15,8 @@ import { RootStackParamList } from '../../../App';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SearchFood'>;
 
-export const SearchFoodScreen = ({ navigation }: Props) => {
+export const SearchFoodScreen = ({ route, navigation }: Props) => {
+    const { user } = route.params;
     const [searchQuery, setSearchQuery] = useState('');
     const [foods, setFoods] = useState<FoodItem[]>([]);
     const [loading, setLoading] = useState(false);
@@ -80,7 +81,7 @@ export const SearchFoodScreen = ({ navigation }: Props) => {
                                 title={item.label}
                                 description={item.category}
                                 onPress={() => {
-                                    navigation.navigate('FoodPage', { food: item });
+                                    navigation.navigate('FoodPage', { food: item, user });
                                 }}
                                 titleStyle={styles.itemTitle}
                                 descriptionStyle={styles.itemDescription}

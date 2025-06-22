@@ -13,6 +13,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
 import type { FoodItem } from '../../services/api/edamam';
+import { logFoodEntry } from '../../services/supabase/queries/food';
 
 const getNutrientValue = (food: FoodItem, nutrientKey: keyof typeof food.nutrients): number => {
     return food.nutrients[nutrientKey]?.quantity ?? 0;
@@ -39,7 +40,7 @@ type ServingUnit = typeof SERVING_UNITS[number]['value'];
 type Props = NativeStackScreenProps<RootStackParamList, 'FoodPage'>;
 
 export const FoodPage = ({ route, navigation }: Props) => {
-    const { food } = route.params;
+    const { food, isLoggedFood, user } = route.params;
     const [servingSize, setServingSize] = useState(food.servingSize?.toString() ?? '100');
     const [servingUnit, setServingUnit] = useState<ServingUnit>(
         (food.servingSizeUnit as ServingUnit) ?? 'g'
@@ -54,8 +55,24 @@ export const FoodPage = ({ route, navigation }: Props) => {
         setServingSize(filtered);
     };
 
-    const handleFoodLog = () => {
-
+    const handleFoodLog = async () => {
+        const foodEntry = {
+            edamamFoodId: food.foodId,
+            // recipeId
+            servingSize: Number(servingSize),
+            servingUnit: servingUnit
+        }
+        await logFoodEntry(user.id, foodEntry)
+        .then(data => {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+            });
+        })
+        .catch(error => {
+            console.error('Error logging food:', error);
+            // Optionally show an error message to the user
+        });
     }
 
     return (

@@ -70,7 +70,6 @@ export async function searchFoods(query: string): Promise<FoodItem[]> {
         }
 
         const data: SearchResponse = await response.json();
-        console.log("RESULTS")
         
         return data.hints.map(hint => ({
             foodId: hint.food.foodId,

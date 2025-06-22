@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     ScrollView,
@@ -15,23 +15,53 @@ import { signOut } from '../../services/supabase/auth';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
+import { getFoodEntriesByDate } from '../../services/supabase/queries/food';
+import { formatTime } from '../../utils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
-export const HomeScreen = ({ navigation }: Props) => {
+interface FoodLog {
+    id: string;
+    name: string;
+    sugar: number;
+    time: string;
+}
+
+export const HomeScreen = ({ navigation, route }: Props) => {
+    const { user } = route.params; // Get the user from navigation params
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]); // This will hold the food logs for the selected date
+
+    const calculateTotalSugar = (logs: FoodLog[]): number => {
+        return logs.reduce((total, log) => total + log.sugar, 0);
+    };
 
     // Dummy data for demonstration
-    const dailyGoal = 25; // grams
-    const currentIntake = 10; // grams
+    const dailyGoal = 25;
+    const currentIntake = calculateTotalSugar(foodLogs); // Calculate current intake from food logs
     const progressPercentage = Math.min(currentIntake / dailyGoal, 1);
 
-    const dummyFoodLogs = [
-        { id: 1, name: 'Banana', sugar: 14, time: '8:30 AM' },
-        { id: 2, name: 'Coffee with sugar', sugar: 8, time: '9:00 AM' },
-        { id: 3, name: 'Apple', sugar: 10, time: '2:30 PM' },
-    ];
+    useEffect(() => {
+        const getFoodEntries = async () => {
+            return await getFoodEntriesByDate(user.id, selectedDate);
+        };
+
+        // Fetch food entries for the selected date
+        getFoodEntries()
+        .then(data => {
+            const formattedLogs = data.map(entry => {
+                return {
+                    id: entry.id,
+                    name: entry.name,
+                    sugar: entry.sugar,
+                    time: formatTime(entry.consumed_at)
+                }
+            })
+            console.log(formattedLogs);
+            setFoodLogs(formattedLogs);
+        })
+    }, [selectedDate])
 
     const formatDate = (date: Date) => {
         return date.toLocaleDateString('en-US', {
@@ -135,7 +165,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                             titleStyle={styles.cardTitle}
                         />
                         <Card.Content style={styles.cardContent}>
-                            {dummyFoodLogs.map((log) => (
+                            {foodLogs.map((log) => (
                                 <View key={log.id} style={styles.foodLogItem}>
                                     <View>
                                         <Text style={styles.foodName}>{log.name}</Text>
@@ -152,7 +182,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                 <FAB
                     icon="plus"
                     style={styles.fab}
-                    onPress={() => navigation.navigate('SearchFood')}
+                    onPress={() => navigation.navigate('SearchFood', { user })}
                     color={colors.text.inverse}
                 />
             </View>

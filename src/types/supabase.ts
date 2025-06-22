@@ -94,9 +94,11 @@ export type Database = {
           custom_food_id: string | null
           edamam_food_id: string | null
           id: string
+          name: string
           recipe_id: string | null
           serving_size: number
           serving_unit: string
+          sugar: number
           user_id: string
         }
         Insert: {
@@ -105,9 +107,11 @@ export type Database = {
           custom_food_id?: string | null
           edamam_food_id?: string | null
           id?: string
+          name?: string
           recipe_id?: string | null
           serving_size: number
           serving_unit: string
+          sugar: number
           user_id: string
         }
         Update: {
@@ -116,9 +120,11 @@ export type Database = {
           custom_food_id?: string | null
           edamam_food_id?: string | null
           id?: string
+          name?: string
           recipe_id?: string | null
           serving_size?: number
           serving_unit?: string
+          sugar: number
           user_id?: string
         }
         Relationships: [

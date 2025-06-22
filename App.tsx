@@ -18,7 +18,9 @@ import type { FoodItem } from './src/services/api/edamam';
 // Screens on this app
 export type RootStackParamList = {
     Login: undefined; // undefined means no params are expected
-    Home: undefined;
+    Home: {
+        user: any
+    };
     SearchFood: {
         user: any
     };
@@ -127,11 +129,11 @@ export default function App() {
                     >
                         {user ? (
                             <>
-                                <Stack.Screen name="Home" component={HomeScreen} />
+                                <Stack.Screen name="Home" component={HomeScreen} initialParams={{ user }} />
                                 <Stack.Screen
                                     name="SearchFood" 
                                     component={SearchFoodScreen}
-                                    initialParams={{ user: user }}
+                                    initialParams={{ user }}
                                     options={{
                                         headerShown: true,
                                         title: 'Add Food',
@@ -146,7 +148,7 @@ export default function App() {
                                 <Stack.Screen 
                                     name="FoodPage" 
                                     component={FoodPage}
-                                    initialParams={{ user: user }}
+                                    initialParams={{ user }}
                                     options={{
                                         headerShown: true,
                                         headerShadowVisible: false,

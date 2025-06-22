@@ -59,11 +59,14 @@ export const FoodPage = ({ route, navigation }: Props) => {
         const foodEntry = {
             edamamFoodId: food.foodId,
             // recipeId
+            name: food.label,
             servingSize: Number(servingSize),
-            servingUnit: servingUnit
+            servingUnit: servingUnit,
+            sugar: getNutrientValue(food, 'SUGAR') || 0, // Default to 0 if not available
         }
         await logFoodEntry(user.id, foodEntry)
         .then(data => {
+            // Go back to home after logging food
             navigation.reset({
                 index: 0,
                 routes: [{ name: 'Home' }],

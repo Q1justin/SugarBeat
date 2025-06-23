@@ -16,6 +16,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
 import { getFoodEntriesByDate } from '../../services/supabase/queries/food';
+import { getUserGoals } from '../../services/supabase/queries/user_goals';
 import { formatTime } from '../../utils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -27,20 +28,49 @@ interface FoodLog {
     time: string;
 }
 
+interface UserGoal {
+    created_at: string
+    end_date: string | null
+    goal_type: string
+    id: string
+    is_active: boolean | null
+    start_date: string
+    target_value: number
+    timeframe: string
+    updated_at: string
+    user_id: string
+}
+
 export const HomeScreen = ({ navigation, route }: Props) => {
     const { user } = route.params; // Get the user from navigation params
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]); // This will hold the food logs for the selected date
+    const [userGoals, setUserGoals] = useState<UserGoal[]>([]); // To hold user goals data
 
     const calculateTotalSugar = (logs: FoodLog[]): number => {
         return logs.reduce((total, log) => total + log.sugar, 0);
     };
 
     // Dummy data for demonstration
-    const dailyGoal = 25;
+    const sugarGoal = userGoals.find(goal => goal.goal_type === 'added_sugar')?.target_value;
     const currentIntake = calculateTotalSugar(foodLogs); // Calculate current intake from food logs
-    const progressPercentage = Math.min(currentIntake / dailyGoal, 1);
+    const progressPercentage = sugarGoal ? Math.min(currentIntake / sugarGoal, 1) : 0;
+
+    useEffect(() => {
+        const getGoals = async () => {
+            return await getUserGoals(user.id);
+        };
+
+        getGoals()
+        .then(data => {
+            setUserGoals(data)
+        })
+        .catch(error => {
+            console.error('Error fetching user goals:', error);
+            Alert.alert('Error', 'Failed to fetch user goals');
+        });
+    }, [])
 
     useEffect(() => {
         const getFoodEntries = async () => {
@@ -61,6 +91,10 @@ export const HomeScreen = ({ navigation, route }: Props) => {
             console.log(formattedLogs);
             setFoodLogs(formattedLogs);
         })
+        .catch(error => {
+            console.error('Error fetching food entries:', error);
+            Alert.alert('Error', 'Failed to fetch food entries');
+        });
     }, [selectedDate])
 
     const formatDate = (date: Date) => {
@@ -136,27 +170,31 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
                 <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                     {/* Goals Section */}
-                    <Card style={styles.card} mode="elevated">
-                        <Card.Title 
-                            title="Daily Sugar Goal" 
-                            titleStyle={styles.cardTitle}
-                        />
-                        <Card.Content style={styles.cardContent}>
-                            <View style={styles.goalStats}>
-                                <Text style={styles.intakeText}>
-                                    {currentIntake}g / {dailyGoal}g
-                                </Text>
-                                <Text style={styles.remainingText}>
-                                    {dailyGoal - currentIntake}g remaining
-                                </Text>
-                            </View>
-                            <ProgressBar
-                                progress={progressPercentage}
-                                color={progressPercentage >= 1 ? colors.error : colors.progressGood}
-                                style={styles.progressBar}
+                    {
+                        sugarGoal
+                        ? <Card style={styles.card} mode="elevated">
+                            <Card.Title 
+                                title="Daily Sugar Goal" 
+                                titleStyle={styles.cardTitle}
                             />
-                        </Card.Content>
-                    </Card>
+                            <Card.Content style={styles.cardContent}>
+                                <View style={styles.goalStats}>
+                                    <Text style={styles.intakeText}>
+                                        {currentIntake}g / {sugarGoal}g
+                                    </Text>
+                                    <Text style={styles.remainingText}>
+                                        {sugarGoal - currentIntake}g remaining
+                                    </Text>
+                                </View>
+                                <ProgressBar
+                                    progress={progressPercentage}
+                                    color={progressPercentage >= 1 ? colors.error : colors.progressGood}
+                                    style={styles.progressBar}
+                                />
+                            </Card.Content>
+                        </Card>
+                        : <></>
+                    }
 
                     {/* Food Logs Section */}
                     <Card style={styles.card} mode="elevated">

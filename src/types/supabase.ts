@@ -89,12 +89,14 @@ export type Database = {
       }
       food_entries: {
         Row: {
+          calories: number
           consumed_at: string
           created_at: string
           custom_food_id: string | null
           edamam_food_id: string | null
           id: string
           name: string
+          protein: number
           recipe_id: string | null
           serving_size: number
           serving_unit: string
@@ -102,12 +104,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          calories: number
           consumed_at?: string
           created_at?: string
           custom_food_id?: string | null
           edamam_food_id?: string | null
           id?: string
           name?: string
+          protein: number
           recipe_id?: string | null
           serving_size: number
           serving_unit: string
@@ -115,12 +119,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          calories: number
           consumed_at?: string
           created_at?: string
           custom_food_id?: string | null
           edamam_food_id?: string | null
           id?: string
           name?: string
+          protein: number
           recipe_id?: string | null
           serving_size?: number
           serving_unit?: string

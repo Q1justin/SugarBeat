@@ -52,9 +52,11 @@ export const FoodPage = ({ route, navigation }: Props) => {
 
     const handleFoodLog = async () => {
         const foodEntry = {
+            calories: getNutrientValue(food, 'ENERC_KCAL'),
             edamamFoodId: food.foodId,
             // recipeId
             name: food.label,
+            protein: getNutrientValue(food, 'PROCNT'),
             servingSize: Number(servingSize),
             servingUnit: servingUnit,
             sugar: getNutrientValue(food, 'SUGAR') || 0, // Default to 0 if not available

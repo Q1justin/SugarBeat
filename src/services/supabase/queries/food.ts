@@ -47,9 +47,11 @@ export async function addCustomFood(userId: string, food: Omit<CustomFood, 'id' 
 export async function logFoodEntry(
   userId: string,
   entry: {
+    calories: number;
     customFoodId?: string;
     edamamFoodId?: string;
     name: string;
+    protein: number;
     recipeId?: string;
     servingSize: number;
     servingUnit: string;
@@ -60,9 +62,11 @@ export async function logFoodEntry(
     .from('food_entries')
     .insert({
         user_id: userId,
+        calories: entry.calories,
         custom_food_id: entry.customFoodId,
         edamam_food_id: entry.edamamFoodId,
         name: entry.name,
+        protein: entry.protein,
         recipe_id: entry.recipeId,
         serving_size: entry.servingSize,
         serving_unit: entry.servingUnit,

@@ -22,8 +22,10 @@ import { formatTime } from '../../utils';
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 interface FoodLog {
+    calories: number;
     id: string;
     name: string;
+    protein: number;
     sugar: number;
     time: string;
 }
@@ -52,10 +54,26 @@ export const HomeScreen = ({ navigation, route }: Props) => {
         return logs.reduce((total, log) => total + log.sugar, 0);
     };
 
-    // Dummy data for demonstration
+    const calculateTotalCalories = (logs: FoodLog[]): number => {
+        return logs.reduce((total, log) => total + log.calories, 0);
+    };
+
+    const calculateTotalProtein = (logs: FoodLog[]): number => {
+        return logs.reduce((total, log) => total + log.protein, 0);
+    };
+
+    // Goals data
     const sugarGoal = userGoals.find(goal => goal.goal_type === 'added_sugar')?.target_value;
-    const currentIntake = calculateTotalSugar(foodLogs); // Calculate current intake from food logs
-    const progressPercentage = sugarGoal ? Math.min(currentIntake / sugarGoal, 1) : 0;
+    const currentSugarIntake = calculateTotalSugar(foodLogs); // Calculate current intake from food logs
+    const sugarProgressPercentage = sugarGoal ? Math.min(currentSugarIntake / sugarGoal, 1) : 0;
+
+    const calorieGoal = userGoals.find(goal => goal.goal_type === 'calories')?.target_value;
+    const currentCalorieIntake = calculateTotalCalories(foodLogs); // Calculate current intake from food logs
+    const calorieProgressPercentage = calorieGoal ? Math.min(currentCalorieIntake / calorieGoal, 1) : 0;
+
+    const proteinGoal = userGoals.find(goal => goal.goal_type === 'protein')?.target_value;
+    const currentProteinIntake = calculateTotalProtein(foodLogs); // Calculate current intake from food logs
+    const proteinProgressPercentage = proteinGoal ? Math.min(currentProteinIntake / proteinGoal, 1) : 0;
 
     useEffect(() => {
         const getGoals = async () => {
@@ -82,8 +100,10 @@ export const HomeScreen = ({ navigation, route }: Props) => {
         .then(data => {
             const formattedLogs = data.map(entry => {
                 return {
+                    calories: entry.calories || 0,
                     id: entry.id,
                     name: entry.name,
+                    protein: entry.protein || 0,
                     sugar: entry.sugar,
                     time: formatTime(entry.consumed_at)
                 }
@@ -170,31 +190,33 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
                 <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                     {/* Goals Section */}
-                    {
-                        sugarGoal
-                        ? <Card style={styles.card} mode="elevated">
-                            <Card.Title 
-                                title="Daily Sugar Goal" 
-                                titleStyle={styles.cardTitle}
-                            />
-                            <Card.Content style={styles.cardContent}>
-                                <View style={styles.goalStats}>
-                                    <Text style={styles.intakeText}>
-                                        {currentIntake}g / {sugarGoal}g
-                                    </Text>
-                                    <Text style={styles.remainingText}>
-                                        {sugarGoal - currentIntake}g remaining
-                                    </Text>
-                                </View>
-                                <ProgressBar
-                                    progress={progressPercentage}
-                                    color={progressPercentage >= 1 ? colors.error : colors.progressGood}
-                                    style={styles.progressBar}
-                                />
-                            </Card.Content>
-                        </Card>
-                        : <></>
-                    }
+                    <Card style={styles.card} mode="elevated">
+                        <Card.Title 
+                            title="Weekly Goals" 
+                            titleStyle={styles.cardTitle}
+                        />
+                        <Card.Content style={styles.cardContent}>
+                            {
+                                sugarGoal
+                                ? <>
+                                    <View style={styles.goalStats}>
+                                        <Text style={styles.intakeText}>
+                                            {currentSugarIntake}g / {sugarGoal}g
+                                        </Text>
+                                        <Text style={styles.remainingText}>
+                                            {sugarGoal - currentSugarIntake}g remaining
+                                        </Text>
+                                    </View>
+                                    <ProgressBar
+                                        progress={sugarProgressPercentage}
+                                        color={sugarProgressPercentage >= 1 ? colors.error : colors.progressGood}
+                                        style={styles.progressBar}
+                                    />
+                                </>
+                                : <></>
+                            }
+                        </Card.Content>
+                    </Card>
 
                     {/* Food Logs Section */}
                     <Card style={styles.card} mode="elevated">

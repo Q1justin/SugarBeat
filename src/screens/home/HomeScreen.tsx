@@ -192,7 +192,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                     {/* Goals Section */}
                     <Card style={styles.card} mode="elevated">
                         <Card.Title 
-                            title="Weekly Goals" 
+                            title="Goals" 
                             titleStyle={styles.cardTitle}
                         />
                         <Card.Content style={styles.cardContent}>
@@ -204,12 +204,50 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                                             {currentSugarIntake}g / {sugarGoal}g
                                         </Text>
                                         <Text style={styles.remainingText}>
-                                            {sugarGoal - currentSugarIntake}g remaining
+                                            {sugarGoal - currentSugarIntake}g remaining this week
                                         </Text>
                                     </View>
                                     <ProgressBar
                                         progress={sugarProgressPercentage}
                                         color={sugarProgressPercentage >= 1 ? colors.error : colors.progressGood}
+                                        style={styles.progressBar}
+                                    />
+                                </>
+                                : <></>
+                            }
+                            {
+                                calorieGoal
+                                ? <>
+                                    <View style={styles.goalStats}>
+                                        <Text style={styles.intakeText}>
+                                            {currentCalorieIntake}kcal / {calorieGoal}kcal
+                                        </Text>
+                                        <Text style={styles.remainingText}>
+                                            {calorieGoal - currentCalorieIntake}kcal remaining today
+                                        </Text>
+                                    </View>
+                                    <ProgressBar
+                                        progress={calorieProgressPercentage}
+                                        color={calorieProgressPercentage >= 1 ? colors.error : colors.progressGood}
+                                        style={styles.progressBar}
+                                    />
+                                </>
+                                : <></>
+                            }
+                            {
+                                proteinGoal
+                                ? <>
+                                    <View style={styles.goalStats}>
+                                        <Text style={styles.intakeText}>
+                                            {currentProteinIntake}g / {proteinGoal}g
+                                        </Text>
+                                        <Text style={styles.remainingText}>
+                                            {proteinGoal - currentProteinIntake}g remaining today
+                                        </Text>
+                                    </View>
+                                    <ProgressBar
+                                        progress={proteinProgressPercentage}
+                                        color={proteinProgressPercentage >= 1 ? colors.error : colors.progressGood}
                                         style={styles.progressBar}
                                     />
                                 </>
@@ -316,17 +354,17 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     intakeText: {
-        fontSize: 28,
+        fontSize: 20,
         fontWeight: 'bold',
         color: colors.text.primary,
     },
     remainingText: {
-        fontSize: 16,
+        fontSize: 14,
         color: colors.text.secondary,
         marginTop: 4,
     },
     progressBar: {
-        height: 10,
+        height: 7,
         borderRadius: 5,
     },
     foodLogItem: {

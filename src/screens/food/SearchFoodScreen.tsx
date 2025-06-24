@@ -7,7 +7,7 @@ import {
     ActivityIndicator,
     Image,
 } from 'react-native';
-import { Searchbar, List, Text, IconButton } from 'react-native-paper';
+import { Searchbar, List, Text, IconButton, SegmentedButtons } from 'react-native-paper';
 import { searchFoods, type FoodItem } from '../../services/api/edamam';
 import { colors } from '../../theme/colors';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -15,8 +15,8 @@ import { RootStackParamList } from '../../../App';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SearchFood'>;
 
-export const SearchFoodScreen = ({ route, navigation }: Props) => {
-    const { user } = route.params;
+// Separate component for the search tab
+const SearchTab = ({ user, navigation }: { user: any; navigation: Props['navigation'] }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [foods, setFoods] = useState<FoodItem[]>([]);
     const [loading, setLoading] = useState(false);
@@ -29,7 +29,6 @@ export const SearchFoodScreen = ({ route, navigation }: Props) => {
         setError(null);
         try {
             const results = await searchFoods(searchQuery);
-            console.log(results[0])
             setFoods(results);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to search foods');
@@ -37,6 +36,83 @@ export const SearchFoodScreen = ({ route, navigation }: Props) => {
             setLoading(false);
         }
     };
+
+    return (
+        <View style={styles.tabContent}>
+            <Searchbar
+                placeholder="Search for a food..."
+                onChangeText={setSearchQuery}
+                value={searchQuery}
+                onSubmitEditing={onSearch}
+                style={styles.searchBar}
+                iconColor={colors.primary}
+                placeholderTextColor={colors.text.disabled}
+                inputStyle={styles.searchInput}
+            />
+
+            {loading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+            ) : error ? (
+                <View style={styles.centered}>
+                    <Text style={styles.error}>{error}</Text>
+                </View>
+            ) : foods.length === 0 ? (
+                <View style={styles.centered}>
+                    <Text style={styles.placeholder}>Search for food to get started</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={foods}
+                    renderItem={({ item }) => (
+                        <List.Item
+                            title={item.label}
+                            description={item.category}
+                            onPress={() => {
+                                navigation.navigate('FoodPage', { food: item, user });
+                            }}
+                            titleStyle={styles.itemTitle}
+                            descriptionStyle={styles.itemDescription}
+                            style={styles.listItem}
+                            left={props => 
+                                item.image ? (
+                                    <View style={styles.imageContainer}>
+                                        <Image 
+                                            source={{ uri: item.image }} 
+                                            style={styles.foodImage}
+                                        />
+                                    </View>
+                                ) : (
+                                    <List.Icon {...props} icon="food" />
+                                )
+                            }
+                            right={props => (
+                                <List.Icon {...props} icon="chevron-right" color={colors.primary} />
+                            )}
+                        />
+                    )}
+                    keyExtractor={item => `${item.foodId}_${item.label}`}
+                    contentContainerStyle={styles.list}
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                />
+            )}
+        </View>
+    );
+};
+
+// Placeholder component for the favorites tab
+const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navigation'] }) => {
+    return (
+        <View style={styles.tabContent}>
+            <Text style={styles.placeholder}>Favorites coming soon</Text>
+        </View>
+    );
+};
+
+export const SearchFoodScreen = ({ route, navigation }: Props) => {
+    const { user } = route.params;
+    const [activeTab, setActiveTab] = useState('search');
 
     return (
         <SafeAreaView style={styles.container}>
@@ -49,66 +125,22 @@ export const SearchFoodScreen = ({ route, navigation }: Props) => {
                     iconColor={colors.text.primary}
                 />
             </View>
-            <View style={styles.content}>
-                <Searchbar
-                    placeholder="Search for a food..."
-                    onChangeText={setSearchQuery}
-                    value={searchQuery}
-                    onSubmitEditing={onSearch}
-                    style={styles.searchBar}
-                    iconColor={colors.primary}
-                    placeholderTextColor={colors.text.disabled}
-                    inputStyle={styles.searchInput}
+            <View style={styles.tabContainer}>
+                <SegmentedButtons
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    buttons={[
+                        { value: 'search', label: 'Search' },
+                        { value: 'favorites', label: 'Favorites' }
+                    ]}
+                    style={styles.segmentedButtons}
                 />
-
-                {loading ? (
-                    <View style={styles.centered}>
-                        <ActivityIndicator size="large" color={colors.primary} />
-                    </View>
-                ) : error ? (
-                    <View style={styles.centered}>
-                        <Text style={styles.error}>{error}</Text>
-                    </View>
-                ) : foods.length === 0 ? (
-                    <View style={styles.centered}>
-                        <Text style={styles.placeholder}>Search for food to get started</Text>
-                    </View>
-                ) : (
-                    <FlatList
-                        data={foods}
-                        renderItem={({ item }) => (
-                            <List.Item
-                                title={item.label}
-                                description={item.category}
-                                onPress={() => {
-                                    navigation.navigate('FoodPage', { food: item, user });
-                                }}
-                                titleStyle={styles.itemTitle}
-                                descriptionStyle={styles.itemDescription}
-                                style={styles.listItem}
-                                left={props => 
-                                    item.image ? (
-                                        <View style={styles.imageContainer}>
-                                            <Image 
-                                                source={{ uri: item.image }} 
-                                                style={styles.foodImage}
-                                            />
-                                        </View>
-                                    ) : (
-                                        <List.Icon {...props} icon="food" />
-                                    )
-                                }
-                                right={props => (
-                                    <List.Icon {...props} icon="chevron-right" color={colors.primary} />
-                                )}
-                            />
-                        )}
-                        keyExtractor={item => `${item.foodId}_${item.label}`}
-                        contentContainerStyle={styles.list}
-                        ItemSeparatorComponent={() => <View style={styles.separator} />}
-                    />
-                )}
             </View>
+            {activeTab === 'search' ? (
+                <SearchTab user={user} navigation={navigation} />
+            ) : (
+                <FavoritesTab user={user} navigation={navigation} />
+            )}
         </SafeAreaView>
     );
 };
@@ -132,10 +164,6 @@ const styles = StyleSheet.create({
         padding: 0,
         width: 32,
         height: 32,
-    },
-    content: {
-        flex: 1,
-        backgroundColor: colors.background,
     },
     searchBar: {
         margin: 16,
@@ -201,5 +229,17 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         resizeMode: 'cover',
+    },
+    tabContainer: {
+        backgroundColor: colors.cardBackground,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    segmentedButtons: {
+        backgroundColor: colors.cardBackground,
+    },
+    tabContent: {
+        flex: 1,
+        backgroundColor: colors.background,
     },
 });

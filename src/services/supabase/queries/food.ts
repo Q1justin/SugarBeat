@@ -79,3 +79,49 @@ export async function logFoodEntry(
     if (error) throw error;
     return data;
 }
+
+// Get all food entries for a user in a specific week
+export async function getWeeklyFoodLogs(userId: string, date: Date): Promise<{weeklyLogs: FoodEntry[]; todayLogs: FoodEntry[]}> {
+    // Find the Monday of the week (go backwards until we hit Monday)
+    const startOfWeek = new Date(date);
+    startOfWeek.setHours(0, 0, 0, 0);
+    while (startOfWeek.getDay() !== 1) { // 1 is Monday
+        startOfWeek.setDate(startOfWeek.getDate() - 1);
+    }
+
+    // Find the Sunday of the week (go forward until we hit Sunday)
+    const endOfWeek = new Date(date);
+    endOfWeek.setHours(23, 59, 59, 999);
+    while (endOfWeek.getDay() !== 0) { // 0 is Sunday
+        endOfWeek.setDate(endOfWeek.getDate() + 1);
+    }
+
+    // Set up the specific date bounds for passed in date
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+  
+    const { data, error } = await supabase
+    .from('food_entries')
+    .select(`
+        *,
+        custom_foods (*),
+        recipes (*)
+    `)
+    .eq('user_id', userId)
+    .gte('consumed_at', startOfWeek.toISOString())
+    .lte('consumed_at', endOfWeek.toISOString());
+
+    if (error) throw error;
+    // Split the data into weekly and today's logs
+    const todayLogs = data.filter(entry => {
+        const entryDate = new Date(entry.consumed_at);
+        return entryDate >= startOfDay && entryDate <= endOfDay;
+    });
+
+    return {
+        weeklyLogs: data,
+        todayLogs
+    };
+}

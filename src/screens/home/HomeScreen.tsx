@@ -15,7 +15,7 @@ import { signOut } from '../../services/supabase/auth';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
-import { getFoodEntriesByDate } from '../../services/supabase/queries/food';
+import { getWeeklyFoodLogs } from '../../services/supabase/queries/food';
 import { getUserGoals } from '../../services/supabase/queries/user_goals';
 import { formatTime } from '../../utils';
 
@@ -48,6 +48,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]); // This will hold the food logs for the selected date
+    const [weeklyFoodLogs, setWeeklyFoodLogs] = useState<FoodLog[]>([]); // This will hold the food logs for this week
     const [userGoals, setUserGoals] = useState<UserGoal[]>([]); // To hold user goals data
 
     const calculateTotalSugar = (logs: FoodLog[]): number => {
@@ -64,7 +65,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
     // Goals data
     const sugarGoal = userGoals.find(goal => goal.goal_type === 'added_sugar')?.target_value;
-    const currentSugarIntake = calculateTotalSugar(foodLogs); // Calculate current intake from food logs
+    const currentSugarIntake = calculateTotalSugar(weeklyFoodLogs); // Calculate current intake from food logs
     const sugarProgressPercentage = sugarGoal ? Math.min(currentSugarIntake / sugarGoal, 1) : 0;
 
     const calorieGoal = userGoals.find(goal => goal.goal_type === 'calories')?.target_value;
@@ -91,14 +92,15 @@ export const HomeScreen = ({ navigation, route }: Props) => {
     }, [])
 
     useEffect(() => {
-        const getFoodEntries = async () => {
-            return await getFoodEntriesByDate(user.id, selectedDate);
-        };
+        const getWeeklyFoodEntries = async () => {
+            return await getWeeklyFoodLogs(user.id, selectedDate);
+        }
 
         // Fetch food entries for the selected date
-        getFoodEntries()
+        getWeeklyFoodEntries()
         .then(data => {
-            const formattedLogs = data.map(entry => {
+            const weeklyData = data.weeklyLogs;
+            const formattedLogs = weeklyData.map(entry => {
                 return {
                     calories: entry.calories || 0,
                     id: entry.id,
@@ -108,8 +110,11 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                     time: formatTime(entry.consumed_at)
                 }
             })
-            console.log(formattedLogs);
-            setFoodLogs(formattedLogs);
+            // Set weekly logs
+            setWeeklyFoodLogs(formattedLogs);
+            // Set today's logs
+            const todayFoodEntriesIds = data.todayLogs.map(entry => entry.id);
+            setFoodLogs(formattedLogs.filter(log => todayFoodEntriesIds.includes(log.id)));
         })
         .catch(error => {
             console.error('Error fetching food entries:', error);

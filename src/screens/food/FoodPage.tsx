@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     View,
     StyleSheet,
@@ -36,44 +36,67 @@ const SERVING_UNITS = {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FoodPage'>;
 
+type ScaledNutrients = {
+    SUGAR: number;
+    ENERC_KCAL: number;
+    CHOCDF: number;
+    PROCNT: number;
+    FAT: number;
+};
+
 export const FoodPage = ({ route, navigation }: Props) => {
     const { food, isLoggedFood, user } = route.params;
-    const [servingSize, setServingSize] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].quantity.toString() : food.servingSize?.toString());
+    const [originalServingSize] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].quantity : food.servingSize || 100);
+    const [servingSize, setServingSize] = useState(originalServingSize?.toString() || "");
     const [servingUnit, setServingUnit] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].label : food.servingSizeUnit || 'g');
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    const [scaledNutrients, setScaledNutrients] = useState<ScaledNutrients>({
+        SUGAR: getNutrientValue(food, 'SUGAR'),
+        ENERC_KCAL: getNutrientValue(food, 'ENERC_KCAL'),
+        CHOCDF: getNutrientValue(food, 'CHOCDF'),
+        PROCNT: getNutrientValue(food, 'PROCNT'),
+        FAT: getNutrientValue(food, 'FAT'),
+    });
 
     // Handle serving size input change
-    const handleServingSizeChange = (text: string) => {
-        // Only allow numbers and decimal point
-        const filtered = text.replace(/[^0-9.]/g, '');
-        setServingSize(filtered);
+    const handleServingSizeChange = (value: string) => {
+        setServingSize(value);
+        
+        // Calculate scaling factor based on original serving size
+        const newServingSize = parseFloat(value) || 0;
+        const scalingFactor = newServingSize / originalServingSize;
+
+        // Scale all nutrients by the scaling factor
+        setScaledNutrients({
+            SUGAR: getNutrientValue(food, 'SUGAR') * scalingFactor,
+            ENERC_KCAL: getNutrientValue(food, 'ENERC_KCAL') * scalingFactor,
+            CHOCDF: getNutrientValue(food, 'CHOCDF') * scalingFactor,
+            PROCNT: getNutrientValue(food, 'PROCNT') * scalingFactor,
+            FAT: getNutrientValue(food, 'FAT') * scalingFactor,
+        });
     };
 
     const handleFoodLog = async () => {
-        const foodEntry = {
-            calories: getNutrientValue(food, 'ENERC_KCAL'),
-            edamamFoodId: food.foodId,
-            // recipeId
-            name: food.label,
-            protein: getNutrientValue(food, 'PROCNT'),
-            servingSize: Number(servingSize),
-            servingUnit: servingUnit,
-            sugar: getNutrientValue(food, 'SUGAR') || 0, // Default to 0 if not available
-        }
-        await logFoodEntry(user.id, foodEntry)
-        .then(data => {
-            // Go back to home after logging food
+        try {
+            const logEntry = {
+                name: food.label || "",
+                servingSize: parseFloat(servingSize),
+                servingUnit: servingUnit,
+                calories: scaledNutrients.ENERC_KCAL,
+                sugar: scaledNutrients.SUGAR,
+                protein: scaledNutrients.PROCNT,
+            };
+
+            await logFoodEntry(user.id, logEntry);
             navigation.reset({
                 index: 0,
                 routes: [{ name: 'Home' }],
             });
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error logging food:', error);
-            // Optionally show an error message to the user
-        });
-    }
+        }
+    };
 
     const getStandardUnit = (apiUnit: string): string => {
         // Find the matching key (case-insensitive)
@@ -158,31 +181,33 @@ export const FoodPage = ({ route, navigation }: Props) => {
                         {/* Nutrition Facts Section */}
                         <View style={styles.nutrientSection}>
                             <Text style={styles.sectionTitle}>Nutrition Facts</Text>
-                            <NutrientRow 
-                                label="Total Sugars" 
-                                value={getNutrientValue(food, 'SUGAR')} 
-                                unit="g" 
-                            />
-                            <NutrientRow 
-                                label="Calories" 
-                                value={getNutrientValue(food, 'ENERC_KCAL')} 
-                                unit="kcal" 
-                            />
-                            <NutrientRow 
-                                label="Carbohydrates" 
-                                value={getNutrientValue(food, 'CHOCDF')} 
-                                unit="g" 
-                            />
-                            <NutrientRow 
-                                label="Protein" 
-                                value={getNutrientValue(food, 'PROCNT')} 
-                                unit="g" 
-                            />
-                            <NutrientRow 
-                                label="Fat" 
-                                value={getNutrientValue(food, 'FAT')} 
-                                unit="g" 
-                            />
+                            <View style={styles.nutrientsContainer}>
+                                <NutrientRow
+                                    label="Calories"
+                                    value={scaledNutrients.ENERC_KCAL}
+                                    unit="kcal"
+                                />
+                                <NutrientRow
+                                    label="Sugar"
+                                    value={scaledNutrients.SUGAR}
+                                    unit="g"
+                                />
+                                <NutrientRow
+                                    label="Carbs"
+                                    value={scaledNutrients.CHOCDF}
+                                    unit="g"
+                                />
+                                <NutrientRow
+                                    label="Protein"
+                                    value={scaledNutrients.PROCNT}
+                                    unit="g"
+                                />
+                                <NutrientRow
+                                    label="Fat"
+                                    value={scaledNutrients.FAT}
+                                    unit="g"
+                                />
+                            </View>
                         </View>
                     </Card.Content>
                 </Card>
@@ -250,6 +275,9 @@ const styles = StyleSheet.create({
     },
     nutrientSection: {
         gap: 8,
+    },
+    nutrientsContainer: {
+        gap: 12,
     },
     nutrientRow: {
         flexDirection: 'row',

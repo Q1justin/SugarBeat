@@ -134,7 +134,7 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
             // This is a simplified version - you might want to store more data
             foodItem = {
                 foodId: favorite.edamam_food_id,
-                label: favorite.edamam_food_id, // You might want to store the name
+                label: favorite.name,
                 nutrients: {
                     SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
                     SUGAR_ADDED: { label: 'Added Sugar', quantity: 0, unit: 'g' },

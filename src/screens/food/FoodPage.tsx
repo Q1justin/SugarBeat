@@ -127,8 +127,29 @@ export const FoodPage = ({ route, navigation }: Props) => {
 
     const handleFoodLog = async () => {
         try {
+            // Determine the food type and set appropriate ID
+            let edamamFoodId = undefined;
+            let customFoodId = undefined;
+            let recipeId = undefined;
+
+            // Check if this is a custom food based on category
+            if (food.category === 'Custom Food') {
+                customFoodId = food.foodId;
+            }
+            // Check if this is a recipe based on category
+            else if (food.category === 'Recipe') {
+                recipeId = food.foodId;
+            }
+            // Otherwise, assume it's from Edamam
+            else {
+                edamamFoodId = food.foodId;
+            }
+
             const logEntry = {
                 name: food.label || "",
+                edamamFoodId,
+                customFoodId,
+                recipeId,
                 servingSize: parseFloat(servingSize),
                 servingUnit: servingUnit,
                 calories: scaledNutrients.ENERC_KCAL,

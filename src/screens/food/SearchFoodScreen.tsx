@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Searchbar, List, Text, IconButton, SegmentedButtons } from 'react-native-paper';
 import { searchFoods, type FoodItem } from '../../services/api/edamam';
+import { getFavoritesByUserId } from '../../services/supabase/queries/food';
 import { colors } from '../../theme/colors';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
@@ -101,11 +102,173 @@ const SearchTab = ({ user, navigation }: { user: any; navigation: Props['navigat
     );
 };
 
-// Placeholder component for the favorites tab
+// Component for the favorites tab
 const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navigation'] }) => {
+    const [favorites, setFavorites] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadFavorites();
+    }, []);
+
+    const loadFavorites = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const favoritesData = await getFavoritesByUserId(user.id);
+            setFavorites(favoritesData);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load favorites');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFavoritePress = (favorite: any) => {
+        // Convert favorite to FoodItem format for compatibility
+        let foodItem: FoodItem | null = null;
+
+        if (favorite.edamam_food_id) {
+            // For Edamam foods, we'll need to reconstruct the food item
+            // This is a simplified version - you might want to store more data
+            foodItem = {
+                foodId: favorite.edamam_food_id,
+                label: favorite.edamam_food_id, // You might want to store the name
+                nutrients: {
+                    SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
+                    SUGAR_ADDED: { label: 'Added Sugar', quantity: 0, unit: 'g' },
+                    ENERC_KCAL: { label: 'Energy', quantity: 0, unit: 'kcal' },
+                    PROCNT: { label: 'Protein', quantity: 0, unit: 'g' },
+                    CHOCDF: { label: 'Carbs', quantity: 0, unit: 'g' },
+                    FAT: { label: 'Fat', quantity: 0, unit: 'g' }
+                },
+                category: '',
+                image: undefined,
+                servingSize: 100,
+                servingSizeUnit: 'g',
+                servingSizes: []
+            } as FoodItem;
+        } else if (favorite.custom_foods) {
+            // For custom foods, convert to FoodItem format
+            const customFood = favorite.custom_foods;
+            foodItem = {
+                foodId: customFood.id,
+                label: customFood.name,
+                nutrients: customFood.nutrition_values || {
+                    SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
+                    SUGAR_ADDED: { label: 'Added Sugar', quantity: 0, unit: 'g' },
+                    ENERC_KCAL: { label: 'Energy', quantity: 0, unit: 'kcal' },
+                    PROCNT: { label: 'Protein', quantity: 0, unit: 'g' },
+                    CHOCDF: { label: 'Carbs', quantity: 0, unit: 'g' },
+                    FAT: { label: 'Fat', quantity: 0, unit: 'g' }
+                },
+                category: 'Custom Food',
+                image: undefined,
+                servingSize: customFood.serving_size || 100,
+                servingSizeUnit: customFood.serving_unit || 'g',
+                servingSizes: []
+            } as FoodItem;
+        }
+
+        if (foodItem) {
+            navigation.navigate('FoodPage', {
+                food: foodItem,
+                isLoggedFood: false,
+                user: user
+            });
+        }
+    };
+
+    const renderFavoriteItem = ({ item }: { item: any }) => {
+        let title = '';
+        let subtitle = '';
+
+        if (item.custom_foods) {
+            title = item.custom_foods.name;
+            subtitle = 'Custom Food';
+        } else if (item.recipes) {
+            title = item.recipes.name;
+            subtitle = 'Recipe';
+        } else if (item.edamam_food_id) {
+            title = item.edamam_food_id; // You might want to store the actual name
+            subtitle = 'Food Database';
+        }
+
+        return (
+            <List.Item
+                title={title}
+                description={subtitle}
+                onPress={() => handleFavoritePress(item)}
+                style={styles.listItem}
+                titleStyle={styles.itemTitle}
+                descriptionStyle={styles.itemDescription}
+                left={() => (
+                    <View style={styles.itemIcon}>
+                        <IconButton 
+                            icon="heart" 
+                            size={24} 
+                            iconColor={colors.primary}
+                        />
+                    </View>
+                )}
+                right={() => (
+                    <IconButton 
+                        icon="chevron-right" 
+                        size={24} 
+                        iconColor={colors.text.secondary}
+                    />
+                )}
+            />
+        );
+    };
+
+    if (loading) {
+        return (
+            <View style={[styles.tabContent, styles.centered]}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={styles.placeholder}>Loading favorites...</Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={[styles.tabContent, styles.centered]}>
+                <Text style={styles.placeholder}>{error}</Text>
+                <IconButton
+                    icon="refresh"
+                    size={24}
+                    onPress={loadFavorites}
+                    iconColor={colors.primary}
+                />
+            </View>
+        );
+    }
+
+    if (favorites.length === 0) {
+        return (
+            <View style={[styles.tabContent, styles.centered]}>
+                <IconButton 
+                    icon="heart-outline" 
+                    size={48} 
+                    iconColor={colors.text.disabled}
+                />
+                <Text style={styles.placeholder}>No favorites yet</Text>
+                <Text style={styles.placeholder}>Add foods to your favorites to see them here</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.tabContent}>
-            <Text style={styles.placeholder}>Favorites coming soon</Text>
+            <FlatList
+                data={favorites}
+                renderItem={renderFavoriteItem}
+                keyExtractor={(item) => item.id}
+                style={styles.list}
+                showsVerticalScrollIndicator={false}
+            />
         </View>
     );
 };
@@ -213,6 +376,12 @@ const styles = StyleSheet.create({
     itemDescription: {
         color: colors.text.secondary,
         fontSize: 14,
+    },
+    itemIcon: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 50,
+        height: 50,
     },
     separator: {
         height: 8,

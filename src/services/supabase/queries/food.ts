@@ -4,6 +4,7 @@ import { Database } from '../../../types/supabase';
 // Type definitions for better autocomplete and type safety
 type CustomFood = Database['public']['Tables']['custom_foods']['Row'];
 type FoodEntry = Database['public']['Tables']['food_entries']['Row'];
+type Favorite = Database['public']['Tables']['favorites']['Row'];
 
 // Get all food entries for a user on a specific date
 export async function getFoodEntriesByDate(userId: string, date: Date): Promise<FoodEntry []> {
@@ -124,4 +125,21 @@ export async function getWeeklyFoodLogs(userId: string, date: Date): Promise<{we
         weeklyLogs: data,
         todayLogs
     };
+}
+
+// Get all favorite foods for a user
+export async function getFavoritesByUserId(userId: string): Promise<Favorite[]> {
+    console.log(userId)
+    const { data, error } = await supabase
+        .from('favorites')
+        .select(`
+            *,
+            custom_foods (*),
+            recipes (*)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
 }

@@ -51,6 +51,7 @@ export type Database = {
           custom_food_id: string | null
           edamam_food_id: string | null
           id: string
+          name: string | null
           recipe_id: string | null
           user_id: string
         }
@@ -59,6 +60,7 @@ export type Database = {
           custom_food_id?: string | null
           edamam_food_id?: string | null
           id?: string
+          name: string | null
           recipe_id?: string | null
           user_id: string
         }
@@ -67,6 +69,7 @@ export type Database = {
           custom_food_id?: string | null
           edamam_food_id?: string | null
           id?: string
+          name: string | null
           recipe_id?: string | null
           user_id?: string
         }

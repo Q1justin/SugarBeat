@@ -191,7 +191,7 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
             title = item.recipes.name;
             subtitle = 'Recipe';
         } else if (item.edamam_food_id) {
-            title = item.edamam_food_id; // You might want to store the actual name
+            title = item.name;
             subtitle = 'Food Database';
         }
 

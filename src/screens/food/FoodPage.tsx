@@ -26,6 +26,36 @@ const NutrientRow = ({ label, value, unit }: { label: string; value: number; uni
     </View>
 );
 
+const EditableNutrientRow = ({ 
+    label, 
+    value, 
+    unit, 
+    onChangeText 
+}: { 
+    label: string; 
+    value: string; 
+    unit: string; 
+    onChangeText: (text: string) => void; 
+}) => (
+    <View style={styles.nutrientRow}>
+        <Text style={styles.nutrientLabel}>{label}</Text>
+        <View style={styles.editableNutrientContainer}>
+            <TextInput
+                value={value}
+                onChangeText={onChangeText}
+                keyboardType="decimal-pad"
+                style={styles.editableNutrientInput}
+                mode="outlined"
+                dense
+                outlineStyle={styles.editableInputOutline}
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+            />
+            <Text style={styles.nutrientUnit}>{unit}</Text>
+        </View>
+    </View>
+);
+
 const SERVING_UNITS = {
     'Gram': 'g',
     'Milliliter': 'ml',
@@ -47,10 +77,11 @@ type ScaledNutrients = {
 export const FoodPage = ({ route, navigation }: Props) => {
     const { food, isLoggedFood, user } = route.params;
     const [originalServingSize] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].quantity : food.servingSize || 100);
-    const [servingSize, setServingSize] = useState(originalServingSize?.toString() || "");
+    const [servingSize, setServingSize] = useState(originalServingSize?.toString() || "0");
     const [servingUnit, setServingUnit] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].label : food.servingSizeUnit || 'g');
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    const [sugarValue, setSugarValue] = useState(getNutrientValue(food, 'SUGAR').toString() || "0");
     const [scaledNutrients, setScaledNutrients] = useState<ScaledNutrients>({
         SUGAR: getNutrientValue(food, 'SUGAR'),
         ENERC_KCAL: getNutrientValue(food, 'ENERC_KCAL'),
@@ -60,21 +91,38 @@ export const FoodPage = ({ route, navigation }: Props) => {
     });
 
     // Handle serving size input change
-    const handleServingSizeChange = (value: string) => {
+    const handleServingSizeTextChange = (value: string) => {
         setServingSize(value);
-        
+    };
+
+    // Calculate and update nutrients when user finishes editing serving size
+    const handleServingSizeBlur = () => {
         // Calculate scaling factor based on original serving size
-        const newServingSize = parseFloat(value) || 0;
-        const scalingFactor = newServingSize / originalServingSize;
+        const newServingSize = parseFloat(servingSize) || 0;
+        const scalingFactor = newServingSize / parseFloat(servingSize);
+
+        // Update sugar value based on scaling
+        const newSugarValue = parseFloat(sugarValue) * scalingFactor;
+        setSugarValue(newSugarValue.toString());
 
         // Scale all nutrients by the scaling factor
         setScaledNutrients({
-            SUGAR: getNutrientValue(food, 'SUGAR') * scalingFactor,
+            SUGAR: newSugarValue,
             ENERC_KCAL: getNutrientValue(food, 'ENERC_KCAL') * scalingFactor,
             CHOCDF: getNutrientValue(food, 'CHOCDF') * scalingFactor,
             PROCNT: getNutrientValue(food, 'PROCNT') * scalingFactor,
             FAT: getNutrientValue(food, 'FAT') * scalingFactor,
         });
+    };
+
+    // Handle sugar input change
+    const handleSugarChange = (value: string) => {
+        setSugarValue(value);
+        // Update the scaled nutrients with the new sugar value
+        setScaledNutrients(prev => ({
+            ...prev,
+            SUGAR: parseFloat(value) || 0,
+        }));
     };
 
     const handleFoodLog = async () => {
@@ -84,7 +132,7 @@ export const FoodPage = ({ route, navigation }: Props) => {
                 servingSize: parseFloat(servingSize),
                 servingUnit: servingUnit,
                 calories: scaledNutrients.ENERC_KCAL,
-                sugar: scaledNutrients.SUGAR,
+                sugar: parseFloat(sugarValue) || 0,
                 protein: scaledNutrients.PROCNT,
             };
 
@@ -132,12 +180,16 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                 <TextInput
                                     mode="outlined"
                                     value={servingSize}
-                                    onChangeText={handleServingSizeChange}
+                                    onChangeText={handleServingSizeTextChange}
+                                    onBlur={handleServingSizeBlur}
                                     keyboardType="decimal-pad"
                                     style={styles.servingSizeInput}
                                     outlineStyle={styles.inputOutline}
                                     returnKeyType="done"
-                                    onSubmitEditing={Keyboard.dismiss}
+                                    onSubmitEditing={() => {
+                                        Keyboard.dismiss();
+                                        handleServingSizeBlur();
+                                    }}
                                 />
                                 <View>
                                     <Button
@@ -182,15 +234,16 @@ export const FoodPage = ({ route, navigation }: Props) => {
                         <View style={styles.nutrientSection}>
                             <Text style={styles.sectionTitle}>Nutrition Facts</Text>
                             <View style={styles.nutrientsContainer}>
+                                <EditableNutrientRow
+                                    label="Sugar"
+                                    value={sugarValue}
+                                    unit="g"
+                                    onChangeText={handleSugarChange}
+                                />
                                 <NutrientRow
                                     label="Calories"
                                     value={scaledNutrients.ENERC_KCAL}
                                     unit="kcal"
-                                />
-                                <NutrientRow
-                                    label="Sugar"
-                                    value={scaledNutrients.SUGAR}
-                                    unit="g"
                                 />
                                 <NutrientRow
                                     label="Carbs"
@@ -292,6 +345,26 @@ const styles = StyleSheet.create({
     nutrientValue: {
         fontSize: 16,
         color: colors.text.secondary,
+    },
+    editableNutrientContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    editableNutrientInput: {
+        width: 80,
+        height: 40,
+        backgroundColor: colors.cardBackground,
+        fontSize: 16,
+    },
+    editableInputOutline: {
+        borderColor: colors.border,
+        borderWidth: 1,
+    },
+    nutrientUnit: {
+        fontSize: 16,
+        color: colors.text.secondary,
+        minWidth: 20,
     },
     fab: {
         position: 'absolute',

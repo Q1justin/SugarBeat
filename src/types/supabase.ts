@@ -103,7 +103,7 @@ export type Database = {
           recipe_id: string | null
           serving_size: number
           serving_unit: string
-          sugar: number
+          added_sugar: number
           user_id: string
         }
         Insert: {
@@ -118,7 +118,7 @@ export type Database = {
           recipe_id?: string | null
           serving_size: number
           serving_unit: string
-          sugar: number
+          added_sugar: number
           user_id: string
         }
         Update: {
@@ -133,7 +133,7 @@ export type Database = {
           recipe_id?: string | null
           serving_size?: number
           serving_unit?: string
-          sugar: number
+          added_sugar: number
           user_id?: string
         }
         Relationships: [

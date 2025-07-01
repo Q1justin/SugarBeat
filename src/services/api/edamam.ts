@@ -4,12 +4,12 @@ const APP_KEY = process.env.EXPO_PUBLIC_EDAMAM_APP_KEY;
 const BASE_URL = 'https://api.edamam.com/api/food-database/v2';
 
 export type NutrientInfo = {
-    SUGAR: { label: string; quantity: number; unit: string; };
-    SUGAR_ADDED: { label: string; quantity: number; unit: string; };
-    ENERC_KCAL: { label: string; quantity: number; unit: string; };
-    PROCNT: { label: string; quantity: number; unit: string; };
-    FAT: { label: string; quantity: number; unit: string; };
-    CHOCDF: { label: string; quantity: number; unit: string; };
+    sugar: { label: string; quantity: number; unit: string; };
+    addedSugar: { label: string; quantity: number; unit: string; };
+    calories: { label: string; quantity: number; unit: string; };
+    protein: { label: string; quantity: number; unit: string; };
+    fat: { label: string; quantity: number; unit: string; };
+    carbs: { label: string; quantity: number; unit: string; };
 };
 
 export type FoodItem = {
@@ -76,32 +76,32 @@ export async function searchFoods(query: string): Promise<FoodItem[]> {
             label: hint.food.label,
             category: hint.food.category,
             nutrients: {
-                SUGAR: { 
+                sugar: { 
                     label: 'Total Sugars', 
                     quantity: hint.food.nutrients.SUGAR,
                     unit: 'g'
                 },
-                SUGAR_ADDED: { 
+                addedSugar: { 
                     label: 'Added Sugars', 
                     quantity: hint.food.nutrients.SUGAR_ADDED || 0,
                     unit: 'g'
                 },
-                ENERC_KCAL: { 
+                calories: { 
                     label: 'Energy', 
                     quantity: hint.food.nutrients.ENERC_KCAL,
                     unit: 'kcal'
                 },
-                PROCNT: { 
+                protein: { 
                     label: 'Protein', 
                     quantity: hint.food.nutrients.PROCNT,
                     unit: 'g'
                 },
-                FAT: { 
+                fat: { 
                     label: 'Fat', 
                     quantity: hint.food.nutrients.FAT,
                     unit: 'g'
                 },
-                CHOCDF: { 
+                carbs: { 
                     label: 'Carbohydrates', 
                     quantity: hint.food.nutrients.CHOCDF,
                     unit: 'g'

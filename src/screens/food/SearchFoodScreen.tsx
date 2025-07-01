@@ -137,11 +137,11 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
                 label: favorite.name,
                 nutrients: {
                     SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
-                    SUGAR_ADDED: { label: 'Added Sugar', quantity: 0, unit: 'g' },
-                    ENERC_KCAL: { label: 'Energy', quantity: 0, unit: 'kcal' },
-                    PROCNT: { label: 'Protein', quantity: 0, unit: 'g' },
-                    CHOCDF: { label: 'Carbs', quantity: 0, unit: 'g' },
-                    FAT: { label: 'Fat', quantity: 0, unit: 'g' }
+                    addedSugar: { label: 'Added Sugar', quantity: 0, unit: 'g' },
+                    calories: { label: 'Energy', quantity: 0, unit: 'kcal' },
+                    protein: { label: 'Protein', quantity: 0, unit: 'g' },
+                    carbs: { label: 'Carbs', quantity: 0, unit: 'g' },
+                    fat: { label: 'Fat', quantity: 0, unit: 'g' }
                 },
                 category: '',
                 image: undefined,
@@ -157,11 +157,11 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
                 label: customFood.name,
                 nutrients: customFood.nutrition_values || {
                     SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
-                    SUGAR_ADDED: { label: 'Added Sugar', quantity: 0, unit: 'g' },
-                    ENERC_KCAL: { label: 'Energy', quantity: 0, unit: 'kcal' },
-                    PROCNT: { label: 'Protein', quantity: 0, unit: 'g' },
-                    CHOCDF: { label: 'Carbs', quantity: 0, unit: 'g' },
-                    FAT: { label: 'Fat', quantity: 0, unit: 'g' }
+                    addedSugar: { label: 'Added Sugar', quantity: 0, unit: 'g' },
+                    calories: { label: 'Energy', quantity: 0, unit: 'kcal' },
+                    protein: { label: 'Protein', quantity: 0, unit: 'g' },
+                    carbs: { label: 'Carbs', quantity: 0, unit: 'g' },
+                    fat: { label: 'Fat', quantity: 0, unit: 'g' }
                 },
                 category: 'Custom Food',
                 image: undefined,

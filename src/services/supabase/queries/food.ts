@@ -56,7 +56,7 @@ export async function logFoodEntry(
     recipeId?: string;
     servingSize: number;
     servingUnit: string;
-    sugar: number;
+    addedSugar: number;
   }
 ) {
     const { data, error } = await supabase
@@ -71,7 +71,7 @@ export async function logFoodEntry(
         recipe_id: entry.recipeId,
         serving_size: entry.servingSize,
         serving_unit: entry.servingUnit,
-        sugar: entry.sugar,
+        added_sugar: entry.addedSugar,
         consumed_at: new Date().toISOString()
     })
     .select()

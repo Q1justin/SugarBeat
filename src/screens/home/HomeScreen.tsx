@@ -26,7 +26,7 @@ interface FoodLog {
     id: string;
     name: string;
     protein: number;
-    sugar: number;
+    addedSugar: number;
     time: string;
 }
 
@@ -52,7 +52,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
     const [userGoals, setUserGoals] = useState<UserGoal[]>([]); // To hold user goals data
 
     const calculateTotalSugar = (logs: FoodLog[]): number => {
-        return logs.reduce((total, log) => total + log.sugar, 0);
+        return logs.reduce((total, log) => total + log.addedSugar, 0);
     };
 
     const calculateTotalCalories = (logs: FoodLog[]): number => {
@@ -106,7 +106,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                     id: entry.id,
                     name: entry.name,
                     protein: entry.protein || 0,
-                    sugar: entry.sugar,
+                    addedSugar: entry.added_sugar,
                     time: formatTime(entry.consumed_at)
                 }
             })
@@ -274,7 +274,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                                         <Text style={styles.foodName}>{log.name.length >= 30 ? `${log.name.slice(0, 30)}...` : log.name}</Text>
                                         <Text style={styles.foodTime}>{log.time}</Text>
                                     </View>
-                                    <Text style={styles.sugarAmount}>{log.sugar}g sugar</Text>
+                                    <Text style={styles.sugarAmount}>{log.addedSugar}g added sugar</Text>
                                 </View>
                             ))}
                         </Card.Content>

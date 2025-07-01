@@ -7,7 +7,7 @@ import {
     ActivityIndicator,
     Image,
 } from 'react-native';
-import { Searchbar, List, Text, IconButton, SegmentedButtons } from 'react-native-paper';
+import { Searchbar, List, Text, IconButton, SegmentedButtons, FAB } from 'react-native-paper';
 import { searchFoods, getFoodById, type FoodItem } from '../../services/api/edamam';
 import { getFavoritesByUserId } from '../../services/supabase/queries/food';
 import { colors } from '../../theme/colors';
@@ -326,6 +326,14 @@ export const SearchFoodScreen = ({ route, navigation }: Props) => {
             ) : (
                 <FavoritesTab user={user} navigation={navigation} />
             )}
+            <FAB
+                icon="plus"
+                style={styles.fab}
+                onPress={() => {
+                    navigation.navigate('CreateCustom', { user });
+                }}
+                color={colors.text.inverse}
+            />
         </SafeAreaView>
     );
 };
@@ -432,5 +440,18 @@ const styles = StyleSheet.create({
     tabContent: {
         flex: 1,
         backgroundColor: colors.background,
+    },
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
+        backgroundColor: colors.primary,
+        borderRadius: 28,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
 });

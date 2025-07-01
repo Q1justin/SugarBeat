@@ -125,3 +125,96 @@ export function getNutrientValue(food: FoodItem, nutrientKey: keyof NutrientInfo
 export function getNutrientUnit(food: FoodItem, nutrientKey: keyof NutrientInfo): string {
     return food.nutrients[nutrientKey]?.unit ?? 'g';
 }
+
+/**
+ * Get a specific food item by its ID from the Edamam database
+ * @param foodId The unique food ID from Edamam
+ */
+export async function getFoodById(foodId: string): Promise<FoodItem | null> {
+    if (!APP_ID || !APP_KEY) {
+        throw new Error('Missing Edamam API configuration. Please check your environment variables.');
+    }
+
+    try {
+        const response = await fetch(
+            `${BASE_URL}/nutrients?app_id=${APP_ID}&app_key=${APP_KEY}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ingredients: [
+                        {
+                            quantity: 100,
+                            measureURI: "http://www.edamam.com/ontologies/edamam.owl#Measure_gram",
+                            foodId: foodId
+                        }
+                    ]
+                })
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                return null; // Food not found
+            }
+            throw new Error(`Edamam API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        // Extract food data from the nutrients response
+        if (data.ingredients && data.ingredients.length > 0) {
+            const ingredient = data.ingredients[0];
+            const parsed = ingredient.parsed[0];
+            
+            return {
+                foodId: parsed.foodId,
+                label: parsed.food,
+                category: parsed.foodCategory || '',
+                nutrients: {
+                    sugar: { 
+                        label: 'Total Sugars', 
+                        quantity: data.totalNutrients?.SUGAR?.quantity || 0,
+                        unit: 'g'
+                    },
+                    addedSugar: { 
+                        label: 'Added Sugars', 
+                        quantity: data.totalNutrients?.SUGAR_ADDED?.quantity || 0,
+                        unit: 'g'
+                    },
+                    calories: { 
+                        label: 'Energy', 
+                        quantity: data.totalNutrients?.ENERC_KCAL?.quantity || 0,
+                        unit: 'kcal'
+                    },
+                    protein: { 
+                        label: 'Protein', 
+                        quantity: data.totalNutrients?.PROCNT?.quantity || 0,
+                        unit: 'g'
+                    },
+                    fat: { 
+                        label: 'Fat', 
+                        quantity: data.totalNutrients?.FAT?.quantity || 0,
+                        unit: 'g'
+                    },
+                    carbs: { 
+                        label: 'Carbohydrates', 
+                        quantity: data.totalNutrients?.CHOCDF?.quantity || 0,
+                        unit: 'g'
+                    },
+                },
+                servingSizes: ingredient.measures || [],
+                servingSize: 100,
+                servingSizeUnit: 'g',
+                image: undefined, // Nutrients endpoint doesn't return images
+            };
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error getting food by ID:', error);
+        throw error;
+    }
+}

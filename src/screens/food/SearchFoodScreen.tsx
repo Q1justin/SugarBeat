@@ -8,7 +8,7 @@ import {
     Image,
 } from 'react-native';
 import { Searchbar, List, Text, IconButton, SegmentedButtons } from 'react-native-paper';
-import { searchFoods, type FoodItem } from '../../services/api/edamam';
+import { searchFoods, getFoodById, type FoodItem } from '../../services/api/edamam';
 import { getFavoritesByUserId } from '../../services/supabase/queries/food';
 import { colors } from '../../theme/colors';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -125,28 +125,37 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
         }
     };
 
-    const handleFavoritePress = (favorite: any) => {
+    const handleFavoritePress = async (favorite: any) => {
         // Convert favorite to FoodItem format for compatibility
         let foodItem: FoodItem | null = null;
 
         if (favorite.edamam_food_id) {
             // For Edamam foods, we'll need to reconstruct the food item
             // This is a simplified version - you might want to store more data
+
+            const edamamFood = await getFoodById(favorite.edamam_food_id);
+            console.log('Edamam food:', edamamFood);
+
+            if (!edamamFood) {
+                console.error('Food not found in Edamam database:', favorite.edamam_food_id);
+                return;
+            }
+            
             foodItem = {
                 foodId: favorite.edamam_food_id,
                 label: favorite.name,
                 nutrients: {
-                    SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
-                    addedSugar: { label: 'Added Sugar', quantity: 0, unit: 'g' },
-                    calories: { label: 'Energy', quantity: 0, unit: 'kcal' },
-                    protein: { label: 'Protein', quantity: 0, unit: 'g' },
-                    carbs: { label: 'Carbs', quantity: 0, unit: 'g' },
-                    fat: { label: 'Fat', quantity: 0, unit: 'g' }
+                    sugar: { label: 'Sugar', quantity: edamamFood.nutrients.sugar.quantity, unit: edamamFood.nutrients.sugar.unit },
+                    addedSugar: { label: 'Added Sugar', quantity: edamamFood.nutrients.addedSugar.quantity, unit: edamamFood.nutrients.addedSugar.unit },
+                    calories: { label: 'Energy', quantity: edamamFood.nutrients.calories.quantity, unit: edamamFood.nutrients.calories.unit },
+                    protein: { label: 'Protein', quantity: edamamFood.nutrients.protein.quantity, unit: edamamFood.nutrients.protein.unit },
+                    carbs: { label: 'Carbs', quantity: edamamFood.nutrients.carbs.quantity, unit: edamamFood.nutrients.carbs.unit },
+                    fat: { label: 'Fat', quantity: edamamFood.nutrients.fat.quantity, unit: edamamFood.nutrients.fat.unit }
                 },
                 category: '',
                 image: undefined,
-                servingSize: 100,
-                servingSizeUnit: 'g',
+                servingSize: edamamFood.servingSize,
+                servingSizeUnit: edamamFood.servingSizeUnit,
                 servingSizes: []
             } as FoodItem;
         } else if (favorite.custom_foods) {
@@ -156,7 +165,7 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
                 foodId: customFood.id,
                 label: customFood.name,
                 nutrients: customFood.nutrition_values || {
-                    SUGAR: { label: 'Sugar', quantity: 0, unit: 'g' },
+                    sugar: { label: 'Sugar', quantity: 0, unit: 'g' },
                     addedSugar: { label: 'Added Sugar', quantity: 0, unit: 'g' },
                     calories: { label: 'Energy', quantity: 0, unit: 'kcal' },
                     protein: { label: 'Protein', quantity: 0, unit: 'g' },

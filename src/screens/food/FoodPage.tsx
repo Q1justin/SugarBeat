@@ -26,7 +26,7 @@ const NutrientRow = ({ label, value, unit }: { label: string; value: number; uni
     </View>
 );
 
-const EditableNutrientRow = ({ 
+const EditableNutrientRow = ({
     label, 
     value, 
     unit, 

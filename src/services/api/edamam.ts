@@ -4,12 +4,12 @@ const APP_KEY = process.env.EXPO_PUBLIC_EDAMAM_APP_KEY;
 const BASE_URL = 'https://api.edamam.com/api/food-database/v2';
 
 export type NutrientInfo = {
-    sugar: { label: string; quantity: number; unit: string; };
-    addedSugar: { label: string; quantity: number; unit: string; };
-    calories: { label: string; quantity: number; unit: string; };
-    protein: { label: string; quantity: number; unit: string; };
-    fat: { label: string; quantity: number; unit: string; };
-    carbs: { label: string; quantity: number; unit: string; };
+    sugar: { quantity: number; unit: string; };
+    addedSugar: { quantity: number; unit: string; };
+    calories: { quantity: number; unit: string; };
+    protein: { quantity: number; unit: string; };
+    fat: { quantity: number; unit: string; };
+    carbs: { quantity: number; unit: string; };
 };
 
 export type FoodItem = {
@@ -87,7 +87,7 @@ export async function searchFoods(query: string): Promise<FoodItem[]> {
                     unit: 'g'
                 },
                 calories: { 
-                    label: 'Energy', 
+                    label: 'Calories', 
                     quantity: hint.food.nutrients.ENERC_KCAL,
                     unit: 'kcal'
                 },
@@ -175,32 +175,26 @@ export async function getFoodById(foodId: string): Promise<FoodItem | null> {
                 category: parsed.foodCategory || '',
                 nutrients: {
                     sugar: { 
-                        label: 'Total Sugars', 
                         quantity: data.totalNutrients?.SUGAR?.quantity || 0,
                         unit: 'g'
                     },
                     addedSugar: { 
-                        label: 'Added Sugars', 
                         quantity: data.totalNutrients?.SUGAR_ADDED?.quantity || 0,
                         unit: 'g'
                     },
                     calories: { 
-                        label: 'Energy', 
                         quantity: data.totalNutrients?.ENERC_KCAL?.quantity || 0,
                         unit: 'kcal'
                     },
                     protein: { 
-                        label: 'Protein', 
                         quantity: data.totalNutrients?.PROCNT?.quantity || 0,
                         unit: 'g'
                     },
                     fat: { 
-                        label: 'Fat', 
                         quantity: data.totalNutrients?.FAT?.quantity || 0,
                         unit: 'g'
                     },
                     carbs: { 
-                        label: 'Carbohydrates', 
                         quantity: data.totalNutrients?.CHOCDF?.quantity || 0,
                         unit: 'g'
                     },
@@ -208,7 +202,6 @@ export async function getFoodById(foodId: string): Promise<FoodItem | null> {
                 servingSizes: ingredient.measures || [],
                 servingSize: 100,
                 servingSizeUnit: 'g',
-                image: undefined, // Nutrients endpoint doesn't return images
             };
         }
 

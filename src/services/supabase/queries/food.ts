@@ -129,7 +129,6 @@ export async function getWeeklyFoodLogs(userId: string, date: Date): Promise<{we
 
 // Get all favorite foods for a user
 export async function getFavoritesByUserId(userId: string): Promise<Favorite[]> {
-    console.log(userId)
     const { data, error } = await supabase
         .from('favorites')
         .select(`

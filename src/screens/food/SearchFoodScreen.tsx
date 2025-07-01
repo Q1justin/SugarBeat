@@ -30,7 +30,19 @@ const SearchTab = ({ user, navigation }: { user: any; navigation: Props['navigat
         setError(null);
         try {
             const results = await searchFoods(searchQuery);
-            setFoods(results);
+            const formattedResults = results.map(item => ({
+                ...item,
+                nutrients: {
+                    sugar: { quantity: item.nutrients.sugar.quantity, unit: item.nutrients.sugar.unit },
+                    addedSugar: { quantity: item.nutrients.addedSugar.quantity, unit: item.nutrients.addedSugar.unit },
+                    calories: { quantity: item.nutrients.calories.quantity, unit: item.nutrients.calories.unit },
+                    protein: { quantity: item.nutrients.protein.quantity, unit: item.nutrients.protein.unit },
+                    carbs: {  quantity: item.nutrients.carbs.quantity, unit: item.nutrients.carbs.unit },
+                    fat: { quantity: item.nutrients.fat.quantity, unit: item.nutrients.fat.unit },
+                },
+                servingSizes: item.servingSizes || [],
+            }));
+            setFoods(formattedResults);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to search foods');
         } finally {
@@ -134,7 +146,6 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
             // This is a simplified version - you might want to store more data
 
             const edamamFood = await getFoodById(favorite.edamam_food_id);
-            console.log('Edamam food:', edamamFood);
 
             if (!edamamFood) {
                 console.error('Food not found in Edamam database:', favorite.edamam_food_id);
@@ -145,12 +156,12 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
                 foodId: favorite.edamam_food_id,
                 label: favorite.name,
                 nutrients: {
-                    sugar: { label: 'Sugar', quantity: edamamFood.nutrients.sugar.quantity, unit: edamamFood.nutrients.sugar.unit },
-                    addedSugar: { label: 'Added Sugar', quantity: edamamFood.nutrients.addedSugar.quantity, unit: edamamFood.nutrients.addedSugar.unit },
-                    calories: { label: 'Energy', quantity: edamamFood.nutrients.calories.quantity, unit: edamamFood.nutrients.calories.unit },
-                    protein: { label: 'Protein', quantity: edamamFood.nutrients.protein.quantity, unit: edamamFood.nutrients.protein.unit },
-                    carbs: { label: 'Carbs', quantity: edamamFood.nutrients.carbs.quantity, unit: edamamFood.nutrients.carbs.unit },
-                    fat: { label: 'Fat', quantity: edamamFood.nutrients.fat.quantity, unit: edamamFood.nutrients.fat.unit }
+                    sugar: { quantity: edamamFood.nutrients.sugar.quantity, unit: edamamFood.nutrients.sugar.unit },
+                    addedSugar: { quantity: edamamFood.nutrients.addedSugar.quantity, unit: edamamFood.nutrients.addedSugar.unit },
+                    calories: { quantity: edamamFood.nutrients.calories.quantity, unit: edamamFood.nutrients.calories.unit },
+                    protein: { quantity: edamamFood.nutrients.protein.quantity, unit: edamamFood.nutrients.protein.unit },
+                    carbs: { quantity: edamamFood.nutrients.carbs.quantity, unit: edamamFood.nutrients.carbs.unit },
+                    fat: { quantity: edamamFood.nutrients.fat.quantity, unit: edamamFood.nutrients.fat.unit }
                 },
                 category: '',
                 image: undefined,
@@ -161,16 +172,18 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
         } else if (favorite.custom_foods) {
             // For custom foods, convert to FoodItem format
             const customFood = favorite.custom_foods;
+            const nutritionValues = customFood.nutrition_values;
+            
             foodItem = {
                 foodId: customFood.id,
                 label: customFood.name,
-                nutrients: customFood.nutrition_values || {
-                    sugar: { label: 'Sugar', quantity: 0, unit: 'g' },
-                    addedSugar: { label: 'Added Sugar', quantity: 0, unit: 'g' },
-                    calories: { label: 'Energy', quantity: 0, unit: 'kcal' },
-                    protein: { label: 'Protein', quantity: 0, unit: 'g' },
-                    carbs: { label: 'Carbs', quantity: 0, unit: 'g' },
-                    fat: { label: 'Fat', quantity: 0, unit: 'g' }
+                nutrients: {
+                    sugar: { quantity: nutritionValues.sugar, unit: customFood.serving_unit },
+                    addedSugar: { quantity: nutritionValues.addedSugar, unit: customFood.serving_unit },
+                    calories: { quantity: nutritionValues.calories, unit: 'kcal' },
+                    protein: { quantity: nutritionValues.protein, unit: customFood.serving_unit },
+                    carbs: { quantity: nutritionValues.carbs, unit: customFood.serving_unit },
+                    fat: { quantity: nutritionValues.fat, unit: customFood.serving_unit }
                 },
                 category: 'Custom Food',
                 image: undefined,

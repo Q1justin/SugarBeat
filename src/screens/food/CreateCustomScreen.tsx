@@ -6,7 +6,7 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
 } from 'react-native';
-import { Text, Card, TextInput, Button, FAB } from 'react-native-paper';
+import { Text, Card, TextInput, FAB } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';

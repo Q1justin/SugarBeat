@@ -142,3 +142,16 @@ export async function getFavoritesByUserId(userId: string): Promise<Favorite[]> 
     if (error) throw error;
     return data;
 }
+
+// Search custom foods by name
+export async function searchCustomFoods(userId: string, query: string): Promise<CustomFood[]> {
+    const { data, error } = await supabase
+        .from('custom_foods')
+        .select('*')
+        .eq('user_id', userId)
+        .ilike('name', `%${query}%`)
+        .order('name');
+
+    if (error) throw error;
+    return data || [];
+}

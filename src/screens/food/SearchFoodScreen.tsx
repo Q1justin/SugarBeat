@@ -8,8 +8,8 @@ import {
     Image,
 } from 'react-native';
 import { Searchbar, List, Text, IconButton, SegmentedButtons, FAB } from 'react-native-paper';
-import { searchFoods, getFoodById, type FoodItem } from '../../services/api/edamam';
-import { getFavoritesByUserId } from '../../services/supabase/queries/food';
+import { searchFoods, getFoodById, convertCustomFoodToFoodItem, type FoodItem } from '../../services/api/edamam';
+import { getFavoritesByUserId, searchCustomFoods } from '../../services/supabase/queries/food';
 import { colors } from '../../theme/colors';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
@@ -29,20 +29,35 @@ const SearchTab = ({ user, navigation }: { user: any; navigation: Props['navigat
         setLoading(true);
         setError(null);
         try {
-            const results = await searchFoods(searchQuery);
-            const formattedResults = results.map(item => ({
+            // Search both Edamam API and custom foods in parallel
+            const [edamamResults, customFoodResults] = await Promise.all([
+                searchFoods(searchQuery),
+                searchCustomFoods(user.id, searchQuery)
+            ]);
+
+            // Format Edamam results
+            const formattedEdamamResults = edamamResults.map(item => ({
                 ...item,
                 nutrients: {
                     sugar: { quantity: item.nutrients.sugar.quantity, unit: item.nutrients.sugar.unit },
                     addedSugar: { quantity: item.nutrients.addedSugar.quantity, unit: item.nutrients.addedSugar.unit },
                     calories: { quantity: item.nutrients.calories.quantity, unit: item.nutrients.calories.unit },
                     protein: { quantity: item.nutrients.protein.quantity, unit: item.nutrients.protein.unit },
-                    carbs: {  quantity: item.nutrients.carbs.quantity, unit: item.nutrients.carbs.unit },
+                    carbs: { quantity: item.nutrients.carbs.quantity, unit: item.nutrients.carbs.unit },
                     fat: { quantity: item.nutrients.fat.quantity, unit: item.nutrients.fat.unit },
                 },
                 servingSizes: item.servingSizes || [],
             }));
-            setFoods(formattedResults);
+
+            // Convert custom foods to FoodItem format
+            const formattedCustomResults = customFoodResults.map(customFood => {
+                return convertCustomFoodToFoodItem(customFood)
+            });
+
+            // Combine results with custom foods first (user's own foods prioritized)
+            const allResults = [...formattedCustomResults, ...formattedEdamamResults];
+            
+            setFoods(allResults);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to search foods');
         } finally {

@@ -127,6 +127,48 @@ export function getNutrientUnit(food: FoodItem, nutrientKey: keyof NutrientInfo)
 }
 
 /**
+ * Convert a custom food from the database to FoodItem format
+ * @param customFood The custom food from the database
+ */
+export function convertCustomFoodToFoodItem(customFood: any): FoodItem {
+    return {
+        foodId: customFood.id,
+        label: customFood.name,
+        category: 'Custom Food',
+        nutrients: {
+            sugar: { 
+                quantity: customFood.nutrition_values?.sugar?.quantity || 0,
+                unit: 'g'
+            },
+            addedSugar: { 
+                quantity: customFood.nutrition_values?.addedSugar?.quantity || 0,
+                unit: 'g'
+            },
+            calories: { 
+                quantity: customFood.nutrition_values?.calories?.quantity || 0,
+                unit: 'kcal'
+            },
+            protein: { 
+                quantity: customFood.nutrition_values?.protein?.quantity || 0,
+                unit: 'g'
+            },
+            fat: { 
+                quantity: customFood.nutrition_values?.fat?.quantity || 0,
+                unit: 'g'
+            },
+            carbs: { 
+                quantity: customFood.nutrition_values?.carbs?.quantity || 0,
+                unit: 'g'
+            },
+        },
+        servingSizes: [],
+        servingSize: customFood.serving_size || 100,
+        servingSizeUnit: customFood.serving_unit || 'g',
+        image: undefined,
+    };
+}
+
+/**
  * Get a specific food item by its ID from the Edamam database
  * @param foodId The unique food ID from Edamam
  */

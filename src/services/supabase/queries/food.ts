@@ -155,3 +155,82 @@ export async function searchCustomFoods(userId: string, query: string): Promise<
     if (error) throw error;
     return data || [];
 }
+
+// Add a food to favorites
+export async function addToFavorites(
+    userId: string, 
+    foodData: {
+        name: string;
+        edamamFoodId?: string;
+        customFoodId?: string;
+        recipeId?: string;
+    }
+): Promise<Favorite> {
+    const { data, error } = await supabase
+        .from('favorites')
+        .insert({
+            user_id: userId,
+            name: foodData.name,
+            edamam_food_id: foodData.edamamFoodId || null,
+            custom_food_id: foodData.customFoodId || null,
+            recipe_id: foodData.recipeId || null,
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+}
+
+// Remove a food from favorites
+export async function removeFromFavorites(
+    userId: string,
+    edamamFoodId?: string,
+    customFoodId?: string,
+    recipeId?: string
+): Promise<void> {
+    let query = supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', userId);
+
+    if (edamamFoodId) {
+        query = query.eq('edamam_food_id', edamamFoodId);
+    } else if (customFoodId) {
+        query = query.eq('custom_food_id', customFoodId);
+    } else if (recipeId) {
+        query = query.eq('recipe_id', recipeId);
+    }
+
+    const { error } = await query;
+    if (error) throw error;
+}
+
+// Check if a food is favorited
+export async function isFoodFavorited(
+    userId: string,
+    edamamFoodId?: string,
+    customFoodId?: string,
+    recipeId?: string
+): Promise<boolean> {
+    let query = supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', userId);
+
+    if (edamamFoodId) {
+        query = query.eq('edamam_food_id', edamamFoodId);
+    } else if (customFoodId) {
+        query = query.eq('custom_food_id', customFoodId);
+    } else if (recipeId) {
+        query = query.eq('recipe_id', recipeId);
+    }
+
+    const { data, error } = await query.single();
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+        throw error;
+    }
+    
+    return !!data;
+}

@@ -45,6 +45,8 @@ const SearchTab = ({ user, navigation }: { user: any; navigation: Props['navigat
                     protein: { quantity: item.nutrients.protein.quantity, unit: item.nutrients.protein.unit },
                     carbs: { quantity: item.nutrients.carbs.quantity, unit: item.nutrients.carbs.unit },
                     fat: { quantity: item.nutrients.fat.quantity, unit: item.nutrients.fat.unit },
+                    sodium: { quantity: item.nutrients.sodium.quantity, unit: item.nutrients.sodium.unit },
+                    fiber: { quantity: item.nutrients.fiber.quantity, unit: item.nutrients.fiber.unit },
                 },
                 servingSizes: item.servingSizes || [],
             }));
@@ -176,7 +178,9 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
                     calories: { quantity: edamamFood.nutrients.calories.quantity, unit: edamamFood.nutrients.calories.unit },
                     protein: { quantity: edamamFood.nutrients.protein.quantity, unit: edamamFood.nutrients.protein.unit },
                     carbs: { quantity: edamamFood.nutrients.carbs.quantity, unit: edamamFood.nutrients.carbs.unit },
-                    fat: { quantity: edamamFood.nutrients.fat.quantity, unit: edamamFood.nutrients.fat.unit }
+                    fat: { quantity: edamamFood.nutrients.fat.quantity, unit: edamamFood.nutrients.fat.unit },
+                    sodium: { quantity: edamamFood.nutrients.sodium.quantity, unit: edamamFood.nutrients.sodium.unit },
+                    fiber: { quantity: edamamFood.nutrients.fiber.quantity, unit: edamamFood.nutrients.fiber.unit }
                 },
                 category: '',
                 image: undefined,
@@ -198,7 +202,9 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
                     calories: { quantity: nutritionValues.calories, unit: 'kcal' },
                     protein: { quantity: nutritionValues.protein, unit: customFood.serving_unit },
                     carbs: { quantity: nutritionValues.carbs, unit: customFood.serving_unit },
-                    fat: { quantity: nutritionValues.fat, unit: customFood.serving_unit }
+                    fat: { quantity: nutritionValues.fat, unit: customFood.serving_unit },
+                    sodium: { quantity: nutritionValues.sodium || 0, unit: 'mg' },
+                    fiber: { quantity: nutritionValues.fiber || 0, unit: 'g' }
                 },
                 category: 'Custom Food',
                 image: undefined,

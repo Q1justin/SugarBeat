@@ -10,6 +10,8 @@ export type NutrientInfo = {
     protein: { quantity: number; unit: string; };
     fat: { quantity: number; unit: string; };
     carbs: { quantity: number; unit: string; };
+    sodium: { quantity: number; unit: string; };
+    fiber: { quantity: number; unit: string; };
 };
 
 export type FoodItem = {
@@ -40,6 +42,8 @@ export type SearchResponse = {
                 CHOCDF: number;
                 SUGAR: number;
                 SUGAR_ADDED: number;
+                NA: number;
+                FIBTG: number;
             };
             servingSizes?: Array<{
                 uri: string;
@@ -106,6 +110,16 @@ export async function searchFoods(query: string): Promise<FoodItem[]> {
                     quantity: hint.food.nutrients.CHOCDF,
                     unit: 'g'
                 },
+                sodium: { 
+                    label: 'Sodium', 
+                    quantity: hint.food.nutrients.NA || 0,
+                    unit: 'mg'
+                },
+                fiber: { 
+                    label: 'Fiber', 
+                    quantity: hint.food.nutrients.FIBTG || 0,
+                    unit: 'g'
+                },
             },
             servingSizes: hint.food.servingSizes || [],
             servingSize: 100, // Default to 100g if no serving size provided
@@ -158,6 +172,14 @@ export function convertCustomFoodToFoodItem(customFood: any): FoodItem {
             },
             carbs: { 
                 quantity: customFood.nutrition_values?.carbs?.quantity || 0,
+                unit: 'g'
+            },
+            sodium: { 
+                quantity: customFood.nutrition_values?.sodium?.quantity || 0,
+                unit: 'mg'
+            },
+            fiber: { 
+                quantity: customFood.nutrition_values?.fiber?.quantity || 0,
                 unit: 'g'
             },
         },
@@ -238,6 +260,14 @@ export async function getFoodById(foodId: string): Promise<FoodItem | null> {
                     },
                     carbs: { 
                         quantity: data.totalNutrients?.CHOCDF?.quantity || 0,
+                        unit: 'g'
+                    },
+                    sodium: { 
+                        quantity: data.totalNutrients?.NA?.quantity || 0,
+                        unit: 'mg'
+                    },
+                    fiber: { 
+                        quantity: data.totalNutrients?.FIBTG?.quantity || 0,
                         unit: 'g'
                     },
                 },

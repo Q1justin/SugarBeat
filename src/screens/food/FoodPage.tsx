@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -7,13 +7,13 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
 } from 'react-native';
-import { Text, Card, TextInput, Button, Menu, FAB } from 'react-native-paper';
+import { Text, Card, TextInput, Button, Menu, FAB, IconButton } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
 import type { FoodItem } from '../../services/api/edamam';
-import { logFoodEntry } from '../../services/supabase/queries/food';
+import { logFoodEntry, addToFavorites, removeFromFavorites, isFoodFavorited } from '../../services/supabase/queries/food';
 
 const getNutrientValue = (food: FoodItem, nutrientKey: keyof typeof food.nutrients): number => {
     return food.nutrients[nutrientKey]?.quantity ?? 0;
@@ -72,6 +72,8 @@ type ScaledNutrients = {
     carbs: number;
     protein: number;
     fat: number;
+    sodium: number;
+    fiber: number;
 };
 
 export const FoodPage = ({ route, navigation }: Props) => {
@@ -82,13 +84,62 @@ export const FoodPage = ({ route, navigation }: Props) => {
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
     const [addedSugarValue, setAddedSugarValue] = useState(getNutrientValue(food, 'addedSugar').toString() || "0");
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [favoriteLoading, setFavoriteLoading] = useState(false);
     const [scaledNutrients, setScaledNutrients] = useState<ScaledNutrients>({
         addedSugar: getNutrientValue(food, 'addedSugar'),
         calories: getNutrientValue(food, 'calories'),
         carbs: getNutrientValue(food, 'carbs'),
         protein: getNutrientValue(food, 'protein'),
         fat: getNutrientValue(food, 'fat'),
+        sodium: getNutrientValue(food, 'sodium'),
+        fiber: getNutrientValue(food, 'fiber'),
     });
+
+    const checkFavoriteStatus = async () => {
+        try {
+            const favoriteStatus = await isFoodFavorited(
+                user.id,
+                food.category === 'Custom Food' ? undefined : food.foodId,
+                food.category === 'Custom Food' ? food.foodId : undefined
+            );
+            setIsFavorite(favoriteStatus);
+        } catch (error) {
+            console.error('Error checking favorite status:', error);
+        }
+    };
+
+    // Check if food is favorited on component mount
+    useEffect(() => {
+        checkFavoriteStatus();
+    }, []);
+
+    const handleFavoriteToggle = async () => {
+        setFavoriteLoading(true);
+        try {
+            if (isFavorite) {
+                // Remove from favorites
+                await removeFromFavorites(
+                    user.id,
+                    food.category === 'Custom Food' ? undefined : food.foodId,
+                    food.category === 'Custom Food' ? food.foodId : undefined
+                );
+                setIsFavorite(false);
+            } else {
+                // Add to favorites
+                await addToFavorites(user.id, {
+                    name: food.label,
+                    edamamFoodId: food.category === 'Custom Food' ? undefined : food.foodId,
+                    customFoodId: food.category === 'Custom Food' ? food.foodId : undefined,
+                });
+                setIsFavorite(true);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        } finally {
+            setFavoriteLoading(false);
+        }
+    };
 
     // Handle serving size input change
     const handleServingSizeTextChange = (value: string) => {
@@ -99,10 +150,10 @@ export const FoodPage = ({ route, navigation }: Props) => {
     const handleServingSizeBlur = () => {
         // Calculate scaling factor based on original serving size
         const newServingSize = parseFloat(servingSize) || 0;
-        const scalingFactor = newServingSize / parseFloat(servingSize);
+        const scalingFactor = newServingSize / originalServingSize;
 
         // Update added sugar value based on scaling
-        const newAddedSugarValue = parseFloat(addedSugarValue) * scalingFactor;
+        const newAddedSugarValue = getNutrientValue(food, 'addedSugar') * scalingFactor;
         setAddedSugarValue(newAddedSugarValue.toString());
 
         // Scale all nutrients by the scaling factor
@@ -112,6 +163,8 @@ export const FoodPage = ({ route, navigation }: Props) => {
             carbs: getNutrientValue(food, 'carbs') * scalingFactor,
             protein: getNutrientValue(food, 'protein') * scalingFactor,
             fat: getNutrientValue(food, 'fat') * scalingFactor,
+            sodium: getNutrientValue(food, 'sodium') * scalingFactor,
+            fiber: getNutrientValue(food, 'fiber') * scalingFactor,
         });
     };
 
@@ -121,7 +174,7 @@ export const FoodPage = ({ route, navigation }: Props) => {
         // Update the scaled nutrients with the new sugar value
         setScaledNutrients(prev => ({
             ...prev,
-            SUGAR: parseFloat(value) || 0,
+            addedSugar: parseFloat(value) || 0,
         }));
     };
 
@@ -193,6 +246,15 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                 />
                             ) : null
                         }
+                        right={props => (
+                            <IconButton
+                                icon={isFavorite ? "star" : "star-outline"}
+                                size={24}
+                                iconColor={isFavorite ? colors.primary : colors.text.secondary}
+                                onPress={handleFavoriteToggle}
+                                disabled={favoriteLoading}
+                            />
+                        )}
                     />
                     <Card.Content>
                         <View style={styles.servingSection}>
@@ -279,6 +341,16 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                 <NutrientRow
                                     label="Fat"
                                     value={scaledNutrients.fat}
+                                    unit="g"
+                                />
+                                <NutrientRow
+                                    label="Sodium"
+                                    value={scaledNutrients.sodium}
+                                    unit="mg"
+                                />
+                                <NutrientRow
+                                    label="Fiber"
+                                    value={scaledNutrients.fiber}
                                     unit="g"
                                 />
                             </View>

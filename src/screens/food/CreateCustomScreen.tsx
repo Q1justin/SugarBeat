@@ -6,11 +6,11 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
 } from 'react-native';
-import { Text, Card, TextInput, FAB } from 'react-native-paper';
+import { Text, Card, TextInput, FAB, IconButton } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
-import { addCustomFood } from '../../services/supabase/queries/food';
+import { addCustomFood, addToFavorites } from '../../services/supabase/queries/food';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateCustom'>;
 
@@ -63,6 +63,12 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
     const [fiber, setFiber] = useState('');
     
     const [saving, setSaving] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+    const handleFavoriteToggle = () => {
+        setIsFavorite(!isFavorite);
+    };
 
     const handleSave = async () => {
         if (!foodName.trim()) {
@@ -88,7 +94,16 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
                 }
             };
 
-            await addCustomFood(user.id, customFood);
+            const newCustomFood = await addCustomFood(user.id, customFood);
+            
+            // If favorite is toggled, add to favorites
+            if (isFavorite && newCustomFood) {
+                await addToFavorites(user.id, {
+                    name: foodName.trim(),
+                    customFoodId: newCustomFood.id,
+                });
+            }
+            
             navigation.goBack();
         } catch (error) {
             console.error('Error saving custom food:', error);
@@ -107,6 +122,15 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
                         subtitle="Enter nutrition information"
                         titleStyle={styles.title}
                         subtitleStyle={styles.subtitle}
+                        right={props => (
+                            <IconButton
+                                icon={isFavorite ? "star" : "star-outline"}
+                                size={24}
+                                iconColor={isFavorite ? colors.primary : colors.text.secondary}
+                                onPress={handleFavoriteToggle}
+                                disabled={favoriteLoading}
+                            />
+                        )}
                     />
                     <Card.Content>
                         {/* Food Name Section */}

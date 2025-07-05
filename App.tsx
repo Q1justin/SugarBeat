@@ -14,6 +14,7 @@ import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { SearchFoodScreen } from './src/screens/food/SearchFoodScreen';
 import { FoodPage } from './src/screens/food/FoodPage';
 import { CreateCustomScreen } from './src/screens/food/CreateCustomScreen';
+import { CreateRecipeScreen } from './src/screens/recipes/CreateRecipeScreen';
 import type { FoodItem } from './src/services/api/edamam';
 
 // Screens on this app
@@ -31,6 +32,9 @@ export type RootStackParamList = {
         isLoggedFood?: boolean; // Whether this is a food that was already logged
     };
     CreateCustom: {
+        user: any
+    };
+    CreateRecipe: {
         user: any
     };
 };
@@ -169,6 +173,21 @@ export default function App() {
                                     options={{
                                         headerShown: true,
                                         title: 'Create Custom Food',
+                                        headerShadowVisible: false,
+                                        presentation: 'modal',
+                                        headerStyle: {
+                                            backgroundColor: colors.cardBackground,
+                                        },
+                                        headerTintColor: colors.text.primary,
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="CreateRecipe" 
+                                    component={CreateRecipeScreen}
+                                    initialParams={{ user }}
+                                    options={{
+                                        headerShown: true,
+                                        title: 'Create Recipe',
                                         headerShadowVisible: false,
                                         presentation: 'modal',
                                         headerStyle: {

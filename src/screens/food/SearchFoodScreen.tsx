@@ -7,7 +7,7 @@ import {
     ActivityIndicator,
     Image,
 } from 'react-native';
-import { Searchbar, List, Text, IconButton, SegmentedButtons, FAB } from 'react-native-paper';
+import { Searchbar, List, Text, IconButton, SegmentedButtons, FAB, Dialog, Button } from 'react-native-paper';
 import { searchFoods, getFoodById, convertCustomFoodToFoodItem, type FoodItem } from '../../services/api/edamam';
 import { getFavoritesByUserId, searchCustomFoods } from '../../services/supabase/queries/food';
 import { colors } from '../../theme/colors';
@@ -319,6 +319,7 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
 export const SearchFoodScreen = ({ route, navigation }: Props) => {
     const { user } = route.params;
     const [activeTab, setActiveTab] = useState('search');
+    const [fabMenuVisible, setFabMenuVisible] = useState(false);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -350,11 +351,35 @@ export const SearchFoodScreen = ({ route, navigation }: Props) => {
             <FAB
                 icon="plus"
                 style={styles.fab}
-                onPress={() => {
-                    navigation.navigate('CreateCustom', { user });
-                }}
+                onPress={() => setFabMenuVisible(true)}
                 color={colors.text.inverse}
             />
+            <Dialog visible={fabMenuVisible} onDismiss={() => setFabMenuVisible(false)}>
+                <Dialog.Title>Create New</Dialog.Title>
+                <Dialog.Content>
+                    <Text>What would you like to create?</Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                    <Button
+                        icon="food"
+                        onPress={() => {
+                            setFabMenuVisible(false);
+                            navigation.navigate('CreateCustom', { user });
+                        }}
+                    >
+                        Custom Food
+                    </Button>
+                    <Button
+                        icon="book-open"
+                        onPress={() => {
+                            setFabMenuVisible(false);
+                            navigation.navigate('CreateRecipe', { user });
+                        }}
+                    >
+                        Recipe
+                    </Button>
+                </Dialog.Actions>
+            </Dialog>
         </SafeAreaView>
     );
 };

@@ -13,7 +13,76 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
 import type { FoodItem } from '../../services/api/edamam';
-import { logFoodEntry, addToFavorites, removeFromFavorites, isFoodFavorited } from '../../services/supabase/queries/food';
+import { logFoodEntry, updateFoodEntry, addToFavorites, removeFromFavorites, isFoodFavorited } from '../../services/supabase/queries/food';
+
+// Convert FoodEntry to FoodItem format for editing
+const convertFoodEntryToFoodItem = (foodEntry: any): FoodItem => {
+    // Check if it's from custom_foods, recipes, or Edamam
+    if (foodEntry.custom_foods) {
+        const customFood = foodEntry.custom_foods;
+        return {
+            foodId: customFood.id,
+            label: customFood.name,
+            category: 'Custom Food',
+            nutrients: {
+                sugar: { quantity: customFood.nutrition_values?.sugar?.quantity || 0, unit: 'g' },
+                addedSugar: { quantity: foodEntry.added_sugar || 0, unit: 'g' },
+                calories: { quantity: foodEntry.calories || 0, unit: 'kcal' },
+                protein: { quantity: foodEntry.protein || 0, unit: 'g' },
+                carbs: { quantity: customFood.nutrition_values?.carbs?.quantity || 0, unit: 'g' },
+                fat: { quantity: customFood.nutrition_values?.fat?.quantity || 0, unit: 'g' },
+                sodium: { quantity: customFood.nutrition_values?.sodium?.quantity || 0, unit: 'mg' },
+                fiber: { quantity: customFood.nutrition_values?.fiber?.quantity || 0, unit: 'g' },
+            },
+            servingSizes: [],
+            servingSize: foodEntry.serving_size || 100,
+            servingSizeUnit: foodEntry.serving_unit || 'g',
+            image: undefined,
+        };
+    } else if (foodEntry.recipes) {
+        const recipe = foodEntry.recipes;
+        return {
+            foodId: recipe.id,
+            label: recipe.name,
+            category: 'Recipe',
+            nutrients: {
+                sugar: { quantity: 0, unit: 'g' },
+                addedSugar: { quantity: foodEntry.added_sugar || 0, unit: 'g' },
+                calories: { quantity: foodEntry.calories || 0, unit: 'kcal' },
+                protein: { quantity: foodEntry.protein || 0, unit: 'g' },
+                carbs: { quantity: 0, unit: 'g' },
+                fat: { quantity: 0, unit: 'g' },
+                sodium: { quantity: 0, unit: 'mg' },
+                fiber: { quantity: 0, unit: 'g' },
+            },
+            servingSizes: [],
+            servingSize: foodEntry.serving_size || 1,
+            servingSizeUnit: foodEntry.serving_unit || 'serving',
+            image: undefined,
+        };
+    } else {
+        // Assume it's from Edamam
+        return {
+            foodId: foodEntry.edamam_food_id || '',
+            label: foodEntry.name,
+            category: 'Food Database',
+            nutrients: {
+                sugar: { quantity: 0, unit: 'g' },
+                addedSugar: { quantity: foodEntry.added_sugar || 0, unit: 'g' },
+                calories: { quantity: foodEntry.calories || 0, unit: 'kcal' },
+                protein: { quantity: foodEntry.protein || 0, unit: 'g' },
+                carbs: { quantity: 0, unit: 'g' },
+                fat: { quantity: 0, unit: 'g' },
+                sodium: { quantity: 0, unit: 'mg' },
+                fiber: { quantity: 0, unit: 'g' },
+            },
+            servingSizes: [],
+            servingSize: foodEntry.serving_size || 100,
+            servingSizeUnit: foodEntry.serving_unit || 'g',
+            image: undefined,
+        };
+    }
+};
 
 const getNutrientValue = (food: FoodItem, nutrientKey: keyof typeof food.nutrients): number => {
     return food.nutrients[nutrientKey]?.quantity ?? 0;
@@ -77,31 +146,39 @@ type ScaledNutrients = {
 };
 
 export const FoodPage = ({ route, navigation }: Props) => {
-    const { food, isLoggedFood, user } = route.params;
-    const [originalServingSize] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].quantity : food.servingSize || 100);
+    const { food, foodEntry, isLoggedFood, user } = route.params;
+    
+    // Convert foodEntry to FoodItem format if we're editing an existing entry
+    const currentFood = foodEntry ? convertFoodEntryToFoodItem(foodEntry) : food;
+    
+    if (!currentFood) {
+        throw new Error('No food data provided');
+    }
+    
+    const [originalServingSize] = useState(currentFood?.servingSizes.length > 0 ? currentFood?.servingSizes[0].quantity : currentFood.servingSize || 100);
     const [servingSize, setServingSize] = useState(originalServingSize?.toString() || "0");
-    const [servingUnit, setServingUnit] = useState(food?.servingSizes.length > 0 ? food?.servingSizes[0].label : food.servingSizeUnit || 'g');
+    const [servingUnit, setServingUnit] = useState(currentFood?.servingSizes.length > 0 ? currentFood?.servingSizes[0].label : currentFood.servingSizeUnit || 'g');
     const [menuVisible, setMenuVisible] = useState(false);
     const [buttonLayout, setButtonLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
-    const [addedSugarValue, setAddedSugarValue] = useState(getNutrientValue(food, 'addedSugar').toString() || "0");
+    const [addedSugarValue, setAddedSugarValue] = useState(getNutrientValue(currentFood, 'addedSugar').toString() || "0");
     const [isFavorite, setIsFavorite] = useState(false);
     const [favoriteLoading, setFavoriteLoading] = useState(false);
     const [scaledNutrients, setScaledNutrients] = useState<ScaledNutrients>({
-        addedSugar: getNutrientValue(food, 'addedSugar'),
-        calories: getNutrientValue(food, 'calories'),
-        carbs: getNutrientValue(food, 'carbs'),
-        protein: getNutrientValue(food, 'protein'),
-        fat: getNutrientValue(food, 'fat'),
-        sodium: getNutrientValue(food, 'sodium'),
-        fiber: getNutrientValue(food, 'fiber'),
+        addedSugar: getNutrientValue(currentFood, 'addedSugar'),
+        calories: getNutrientValue(currentFood, 'calories'),
+        carbs: getNutrientValue(currentFood, 'carbs'),
+        protein: getNutrientValue(currentFood, 'protein'),
+        fat: getNutrientValue(currentFood, 'fat'),
+        sodium: getNutrientValue(currentFood, 'sodium'),
+        fiber: getNutrientValue(currentFood, 'fiber'),
     });
 
     const checkFavoriteStatus = async () => {
         try {
             const favoriteStatus = await isFoodFavorited(
                 user.id,
-                food.category === 'Custom Food' ? undefined : food.foodId,
-                food.category === 'Custom Food' ? food.foodId : undefined
+                currentFood.category === 'Custom Food' ? undefined : currentFood.foodId,
+                currentFood.category === 'Custom Food' ? currentFood.foodId : undefined
             );
             setIsFavorite(favoriteStatus);
         } catch (error) {
@@ -121,16 +198,16 @@ export const FoodPage = ({ route, navigation }: Props) => {
                 // Remove from favorites
                 await removeFromFavorites(
                     user.id,
-                    food.category === 'Custom Food' ? undefined : food.foodId,
-                    food.category === 'Custom Food' ? food.foodId : undefined
+                    currentFood.category === 'Custom Food' ? undefined : currentFood.foodId,
+                    currentFood.category === 'Custom Food' ? currentFood.foodId : undefined
                 );
                 setIsFavorite(false);
             } else {
                 // Add to favorites
                 await addToFavorites(user.id, {
-                    name: food.label,
-                    edamamFoodId: food.category === 'Custom Food' ? undefined : food.foodId,
-                    customFoodId: food.category === 'Custom Food' ? food.foodId : undefined,
+                    name: currentFood.label,
+                    edamamFoodId: currentFood.category === 'Custom Food' ? undefined : currentFood.foodId,
+                    customFoodId: currentFood.category === 'Custom Food' ? currentFood.foodId : undefined,
                 });
                 setIsFavorite(true);
             }
@@ -153,18 +230,18 @@ export const FoodPage = ({ route, navigation }: Props) => {
         const scalingFactor = newServingSize / originalServingSize;
 
         // Update added sugar value based on scaling
-        const newAddedSugarValue = getNutrientValue(food, 'addedSugar') * scalingFactor;
+        const newAddedSugarValue = getNutrientValue(currentFood, 'addedSugar') * scalingFactor;
         setAddedSugarValue(newAddedSugarValue.toString());
 
         // Scale all nutrients by the scaling factor
         setScaledNutrients({
             addedSugar: newAddedSugarValue,
-            calories: getNutrientValue(food, 'calories') * scalingFactor,
-            carbs: getNutrientValue(food, 'carbs') * scalingFactor,
-            protein: getNutrientValue(food, 'protein') * scalingFactor,
-            fat: getNutrientValue(food, 'fat') * scalingFactor,
-            sodium: getNutrientValue(food, 'sodium') * scalingFactor,
-            fiber: getNutrientValue(food, 'fiber') * scalingFactor,
+            calories: getNutrientValue(currentFood, 'calories') * scalingFactor,
+            carbs: getNutrientValue(currentFood, 'carbs') * scalingFactor,
+            protein: getNutrientValue(currentFood, 'protein') * scalingFactor,
+            fat: getNutrientValue(currentFood, 'fat') * scalingFactor,
+            sodium: getNutrientValue(currentFood, 'sodium') * scalingFactor,
+            fiber: getNutrientValue(currentFood, 'fiber') * scalingFactor,
         });
     };
 
@@ -180,26 +257,47 @@ export const FoodPage = ({ route, navigation }: Props) => {
 
     const handleFoodLog = async () => {
         try {
+            // Check if we're editing an existing entry
+            if (isLoggedFood && foodEntry) {
+                // Update existing food entry
+                const updateData = {
+                    servingSize: parseFloat(servingSize),
+                    servingUnit: servingUnit,
+                    calories: scaledNutrients.calories,
+                    addedSugar: parseFloat(addedSugarValue) || 0,
+                    protein: scaledNutrients.protein,
+                };
+                
+                await updateFoodEntry(foodEntry.id, updateData);
+                
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                });
+                return;
+            }
+            
+            // Create new food entry
             // Determine the food type and set appropriate ID
             let edamamFoodId = undefined;
             let customFoodId = undefined;
             let recipeId = undefined;
 
             // Check if this is a custom food based on category
-            if (food.category === 'Custom Food') {
-                customFoodId = food.foodId;
+            if (currentFood.category === 'Custom Food') {
+                customFoodId = currentFood.foodId;
             }
             // Check if this is a recipe based on category
-            else if (food.category === 'Recipe') {
-                recipeId = food.foodId;
+            else if (currentFood.category === 'Recipe') {
+                recipeId = currentFood.foodId;
             }
             // Otherwise, assume it's from Edamam
             else {
-                edamamFoodId = food.foodId;
+                edamamFoodId = currentFood.foodId;
             }
 
             const logEntry = {
-                name: food.label || "",
+                name: currentFood.label || "",
                 edamamFoodId,
                 customFoodId,
                 recipeId,
@@ -234,14 +332,14 @@ export const FoodPage = ({ route, navigation }: Props) => {
             <SafeAreaView style={styles.container}>
                 <Card style={styles.card}>
                     <Card.Title
-                        title={food.label}
-                        subtitle={food.category}
+                        title={currentFood.label}
+                        subtitle={currentFood.category}
                         titleStyle={styles.title}
                         subtitleStyle={styles.subtitle}
                         left={props => 
-                            food.image ? (
+                            currentFood.image ? (
                                 <Image 
-                                    source={{ uri: food.image }} 
+                                    source={{ uri: currentFood.image }} 
                                     style={styles.foodImage} 
                                 />
                             ) : null
@@ -298,7 +396,7 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                         onDismiss={() => setMenuVisible(false)}
                                         anchor={buttonLayout}
                                     >
-                                        {food?.servingSizes.map((unit) => (
+                                        {currentFood?.servingSizes.map((unit) => (
                                             <Menu.Item
                                                 key={unit.label}
                                                 onPress={() => {
@@ -358,7 +456,8 @@ export const FoodPage = ({ route, navigation }: Props) => {
                     </Card.Content>
                 </Card>
                 <FAB
-                    icon="plus"
+                    icon={isLoggedFood ? "content-save" : "plus"}
+                    label={isLoggedFood ? "Save Changes" : "Log Food"}
                     style={styles.fab}
                     onPress={handleFoodLog}
                     color={colors.text.inverse}

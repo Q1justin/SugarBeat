@@ -28,7 +28,8 @@ export type RootStackParamList = {
     };
     FoodPage: {
         user: any,
-        food: FoodItem;  // The food item to display
+        food?: FoodItem;  // The food item to display (for new foods)
+        foodEntry?: any;  // The food entry to edit (for existing logged foods)
         isLoggedFood?: boolean; // Whether this is a food that was already logged
     };
     CreateCustom: {

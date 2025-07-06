@@ -234,3 +234,39 @@ export async function isFoodFavorited(
     
     return !!data;
 }
+
+// Update an existing food entry
+export async function updateFoodEntry(
+  entryId: string,
+  updateData: {
+    servingSize?: number;
+    servingUnit?: string;
+    calories: number;
+    addedSugar: number;
+    protein: number;
+  }
+) {
+  // Build the update object
+  const updateFields: any = {
+    calories: updateData.calories,
+    added_sugar: updateData.addedSugar,
+    protein: updateData.protein,
+  };
+
+  if (updateData.servingSize !== undefined) {
+    updateFields.serving_size = updateData.servingSize;
+  }
+  if (updateData.servingUnit !== undefined) {
+    updateFields.serving_unit = updateData.servingUnit;
+  }
+
+  const { data, error } = await supabase
+    .from('food_entries')
+    .update(updateFields)
+    .eq('id', entryId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

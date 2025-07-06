@@ -48,6 +48,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]); // This will hold the food logs for the selected date
+    const [rawFoodEntries, setRawFoodEntries] = useState<any[]>([]); // Store the raw food entries for editing
     const [weeklyFoodLogs, setWeeklyFoodLogs] = useState<FoodLog[]>([]); // This will hold the food logs for this week
     const [userGoals, setUserGoals] = useState<UserGoal[]>([]); // To hold user goals data
 
@@ -115,6 +116,8 @@ export const HomeScreen = ({ navigation, route }: Props) => {
             // Set today's logs
             const todayFoodEntriesIds = data.todayLogs.map(entry => entry.id);
             setFoodLogs(formattedLogs.filter(log => todayFoodEntriesIds.includes(log.id)));
+            // Store raw entries for editing
+            setRawFoodEntries(data.todayLogs);
         })
         .catch(error => {
             console.error('Error fetching food entries:', error);
@@ -268,15 +271,29 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                             titleStyle={styles.cardTitle}
                         />
                         <Card.Content style={styles.cardContent}>
-                            {foodLogs.map((log) => (
-                                <View key={log.id} style={styles.foodLogItem}>
-                                    <View>
-                                        <Text style={styles.foodName}>{log.name.length >= 30 ? `${log.name.slice(0, 30)}...` : log.name}</Text>
-                                        <Text style={styles.foodTime}>{log.time}</Text>
-                                    </View>
-                                    <Text style={styles.sugarAmount}>{log.addedSugar}g added sugar</Text>
-                                </View>
-                            ))}
+                            {foodLogs.map((log, index) => {
+                                const rawEntry = rawFoodEntries.find(entry => entry.id === log.id);
+                                return (
+                                    <TouchableOpacity 
+                                        key={log.id} 
+                                        style={styles.foodLogItem}
+                                        onPress={() => {
+                                            // Navigate to FoodPage with raw entry data for editing
+                                            navigation.navigate('FoodPage', { 
+                                                user, 
+                                                foodEntry: rawEntry, // Pass the raw entry data 
+                                                isLoggedFood: true // Flag to indicate this is editing an existing log
+                                            });
+                                        }}
+                                    >
+                                        <View>
+                                            <Text style={styles.foodName}>{log.name.length >= 30 ? `${log.name.slice(0, 30)}...` : log.name}</Text>
+                                            <Text style={styles.foodTime}>{log.time}</Text>
+                                        </View>
+                                        <Text style={styles.sugarAmount}>{log.addedSugar}g added sugar</Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </Card.Content>
                     </Card>
                 </ScrollView>

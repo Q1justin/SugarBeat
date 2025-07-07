@@ -137,10 +137,6 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadFavorites();
-    }, []);
-
     const loadFavorites = async () => {
         try {
             setLoading(true);
@@ -153,6 +149,10 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
             setLoading(false);
         }
     };
+    
+    useEffect(() => {
+        loadFavorites();
+    }, []);
 
     const handleFavoritePress = async (favorite: any) => {
         // Convert favorite to FoodItem format for compatibility

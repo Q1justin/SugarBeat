@@ -4,6 +4,7 @@ import {
     StyleSheet,
     SafeAreaView,
     TouchableWithoutFeedback,
+    TouchableOpacity,
     Keyboard,
     Alert,
     FlatList,
@@ -50,7 +51,7 @@ export const UserProfileScreen = ({ route, navigation }: Props) => {
             setFriendsLoading(false);
         }
     };
-    
+
     const handleSignOut = async () => {
         Alert.alert(
             'Sign Out',
@@ -182,8 +183,17 @@ export const UserProfileScreen = ({ route, navigation }: Props) => {
                                     {friends.length > 0 ? (
                                         <View style={styles.friendsList}>
                                             <Text style={styles.sectionSubtitle}>Your Friends</Text>
+                                            <Text style={styles.friendsHint}>Tap a friend to view their food log</Text>
                                             {friends.map((friend) => (
-                                                <View key={friend.connection_id} style={styles.friendItem}>
+                                                <TouchableOpacity 
+                                                    key={friend.connection_id} 
+                                                    style={styles.friendItem}
+                                                    onPress={() => navigation.navigate('FriendFoodLog', { 
+                                                        friend, 
+                                                        currentUser: user 
+                                                    })}
+                                                    activeOpacity={0.7}
+                                                >
                                                     <View style={styles.friendInfo}>
                                                         <MaterialCommunityIcons 
                                                             name="account-circle" 
@@ -200,7 +210,12 @@ export const UserProfileScreen = ({ route, navigation }: Props) => {
                                                             </Text>
                                                         </View>
                                                     </View>
-                                                </View>
+                                                    <MaterialCommunityIcons 
+                                                        name="chevron-right" 
+                                                        size={24} 
+                                                        color={colors.text.secondary} 
+                                                    />
+                                                </TouchableOpacity>
                                             ))}
                                         </View>
                                     ) : (
@@ -354,15 +369,31 @@ const styles = StyleSheet.create({
     friendsList: {
         // Container for friends list
     },
+    friendsHint: {
+        fontSize: 12,
+        color: colors.text.secondary,
+        marginBottom: 8,
+        fontStyle: 'italic',
+    },
     friendItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 12,
-        paddingHorizontal: 8,
+        paddingHorizontal: 12,
         borderRadius: 8,
         marginBottom: 8,
         backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.border,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     friendInfo: {
         flexDirection: 'row',

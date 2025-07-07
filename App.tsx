@@ -16,6 +16,7 @@ import { FoodPage } from './src/screens/food/FoodPage';
 import { CreateCustomScreen } from './src/screens/food/CreateCustomScreen';
 import { CreateRecipeScreen } from './src/screens/recipes/CreateRecipeScreen';
 import { UserProfileScreen } from './src/screens/profile/UserProfileScreen';
+import { FriendFoodLogScreen } from './src/screens/profile/FriendFoodLogScreen';
 import type { FoodItem } from './src/services/api/edamam';
 
 // Screens on this app
@@ -41,6 +42,10 @@ export type RootStackParamList = {
     };
     UserProfile: {
         user: any
+    };
+    FriendFoodLog: {
+        friend: any;
+        currentUser: any;
     };
 };
 
@@ -205,6 +210,13 @@ export default function App() {
                                     name="UserProfile" 
                                     component={UserProfileScreen}
                                     initialParams={{ user }}
+                                    options={{
+                                        headerShown: false,
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="FriendFoodLog" 
+                                    component={FriendFoodLogScreen}
                                     options={{
                                         headerShown: false,
                                     }}

@@ -149,7 +149,7 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
             setLoading(false);
         }
     };
-    
+
     useEffect(() => {
         loadFavorites();
     }, []);
@@ -160,7 +160,6 @@ const FavoritesTab = ({ user, navigation }: { user: any; navigation: Props['navi
 
         if (favorite.edamam_food_id) {
             // For Edamam foods, we'll need to reconstruct the food item
-            // This is a simplified version - you might want to store more data
 
             const edamamFood = await getFoodById(favorite.edamam_food_id);
 

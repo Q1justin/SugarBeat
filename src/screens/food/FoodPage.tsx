@@ -23,7 +23,7 @@ const convertFoodEntryToFoodItem = (foodEntry: any): FoodItem => {
         return {
             foodId: customFood.id,
             label: customFood.name,
-            category: 'Custom Food',
+            category: 'custom',
             nutrients: {
                 sugar: { quantity: customFood.nutrition_values?.sugar?.quantity || 0, unit: 'g' },
                 addedSugar: { quantity: foodEntry.added_sugar || 0, unit: 'g' },
@@ -44,7 +44,7 @@ const convertFoodEntryToFoodItem = (foodEntry: any): FoodItem => {
         return {
             foodId: recipe.id,
             label: recipe.name,
-            category: 'Recipe',
+            category: 'recipe',
             nutrients: {
                 sugar: { quantity: 0, unit: 'g' },
                 addedSugar: { quantity: foodEntry.added_sugar || 0, unit: 'g' },
@@ -65,7 +65,7 @@ const convertFoodEntryToFoodItem = (foodEntry: any): FoodItem => {
         return {
             foodId: foodEntry.edamam_food_id || '',
             label: foodEntry.name,
-            category: 'Food Database',
+            category: 'edamam',
             nutrients: {
                 sugar: { quantity: 0, unit: 'g' },
                 addedSugar: { quantity: foodEntry.added_sugar || 0, unit: 'g' },
@@ -177,8 +177,8 @@ export const FoodPage = ({ route, navigation }: Props) => {
         try {
             const favoriteStatus = await isFoodFavorited(
                 user.id,
-                currentFood.category === 'Custom Food' ? undefined : currentFood.foodId,
-                currentFood.category === 'Custom Food' ? currentFood.foodId : undefined
+                currentFood.category === 'custom' ? undefined : currentFood.foodId,
+                currentFood.category === 'custom' ? currentFood.foodId : undefined
             );
             setIsFavorite(favoriteStatus);
         } catch (error) {
@@ -198,16 +198,16 @@ export const FoodPage = ({ route, navigation }: Props) => {
                 // Remove from favorites
                 await removeFromFavorites(
                     user.id,
-                    currentFood.category === 'Custom Food' ? undefined : currentFood.foodId,
-                    currentFood.category === 'Custom Food' ? currentFood.foodId : undefined
+                    currentFood.category === 'custom' ? undefined : currentFood.foodId,
+                    currentFood.category === 'custom' ? currentFood.foodId : undefined
                 );
                 setIsFavorite(false);
             } else {
                 // Add to favorites
                 await addToFavorites(user.id, {
                     name: currentFood.label,
-                    edamamFoodId: currentFood.category === 'Custom Food' ? undefined : currentFood.foodId,
-                    customFoodId: currentFood.category === 'Custom Food' ? currentFood.foodId : undefined,
+                    edamamFoodId: currentFood.category === 'custom' ? undefined : currentFood.foodId,
+                    customFoodId: currentFood.category === 'custom' ? currentFood.foodId : undefined,
                 });
                 setIsFavorite(true);
             }
@@ -276,56 +276,57 @@ export const FoodPage = ({ route, navigation }: Props) => {
                 });
                 return;
             }
-            
             // Create new food entry
-            // Determine the food type and set appropriate ID
-            let edamamFoodId = undefined;
-            let customFoodId = undefined;
-            let recipeId = undefined;
-
-            // Check if this is a custom food based on category
-            if (currentFood.category === 'Custom Food') {
-                customFoodId = currentFood.foodId;
-            }
-            // Check if this is a recipe based on category
-            else if (currentFood.category === 'Recipe') {
-                recipeId = currentFood.foodId;
-            }
-            // Otherwise, assume it's from Edamam
             else {
-                edamamFoodId = currentFood.foodId;
+                // Determine the food type and set appropriate ID
+                let edamamFoodId;
+                let customFoodId;
+                let recipeId;
+
+                // Check if this is a custom food based on category
+                if (currentFood.category === 'custom') {
+                    customFoodId = currentFood.foodId;
+                }
+                // Check if this is a recipe based on category
+                else if (currentFood.category === 'recipe') {
+                    recipeId = currentFood.foodId;
+                }
+                // Otherwise, assume it's from Edamam
+                else {
+                    edamamFoodId = currentFood.foodId;
+                }
+
+                const logEntry = {
+                    name: currentFood.label || "",
+                    edamamFoodId,
+                    customFoodId,
+                    recipeId,
+                    servingSize: parseFloat(servingSize),
+                    servingUnit: servingUnit,
+                    calories: scaledNutrients.calories,
+                    addedSugar: parseFloat(addedSugarValue) || 0,
+                    protein: scaledNutrients.protein,
+                };
+
+                await logFoodEntry(user.id, logEntry);
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                });
             }
-
-            const logEntry = {
-                name: currentFood.label || "",
-                edamamFoodId,
-                customFoodId,
-                recipeId,
-                servingSize: parseFloat(servingSize),
-                servingUnit: servingUnit,
-                calories: scaledNutrients.calories,
-                addedSugar: parseFloat(addedSugarValue) || 0,
-                protein: scaledNutrients.protein,
-            };
-
-            await logFoodEntry(user.id, logEntry);
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-            });
         } catch (error) {
             console.error('Error logging food:', error);
         }
     };
 
-    const getStandardUnit = (apiUnit: string): string => {
-        // Find the matching key (case-insensitive)
-        const match = Object.entries(SERVING_UNITS).find(
-            ([key]) => key.toLowerCase() === apiUnit.toLowerCase()
-        );
-        // Return the abbreviated value if found, otherwise return original
-        return match ? match[1] : apiUnit;
-    };
+    // const getStandardUnit = (apiUnit: string): string => {
+    //     // Find the matching key (case-insensitive)
+    //     const match = Object.entries(SERVING_UNITS).find(
+    //         ([key]) => key.toLowerCase() === apiUnit.toLowerCase()
+    //     );
+    //     // Return the abbreviated value if found, otherwise return original
+    //     return match ? match[1] : apiUnit;
+    // };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -383,7 +384,7 @@ export const FoodPage = ({ route, navigation }: Props) => {
                                             setButtonLayout({ x, y, width, height });
                                         }}
                                     >
-                                        {getStandardUnit(servingUnit) ?? servingUnit}
+                                        {/* {getStandardUnit(servingUnit) ?? servingUnit} */}
                                         <MaterialIcons 
                                             name="arrow-drop-down" 
                                             size={24} 

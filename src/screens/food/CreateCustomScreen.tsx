@@ -26,8 +26,8 @@ const EditableNutrientRow = ({
     unit: string; 
     onChangeText: (text: string) => void;
     placeholder?: string;
-}) => (
-    <View style={styles.nutrientRow}>
+}) => {
+    return <View style={styles.nutrientRow}>
         <Text style={styles.nutrientLabel}>{label}</Text>
         <View style={styles.editableNutrientContainer}>
             <TextInput
@@ -45,7 +45,7 @@ const EditableNutrientRow = ({
             <Text style={styles.nutrientUnit}>{unit}</Text>
         </View>
     </View>
-);
+};
 
 export const CreateCustomScreen = ({ route, navigation }: Props) => {
     const { user } = route.params;

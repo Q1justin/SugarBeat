@@ -6,12 +6,15 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
     Alert,
+    FlatList,
 } from 'react-native';
-import { Text, Card, Button, Divider, IconButton } from 'react-native-paper';
+import { Text, Card, Button, Divider, IconButton, List, Chip } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
 import { colors } from '../../theme/colors';
 import { signOut } from '../../services/supabase/auth';
+import { getFriends, getPendingFriendRequests, type Friend } from '../../services/supabase/queries/friends';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'UserProfile'>;
 
@@ -22,7 +25,32 @@ export const UserProfileScreen = ({ route, navigation }: Props) => {
     const [email, setEmail] = useState(user?.email || '');
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    
+    // Friends state
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
+    const [friendsLoading, setFriendsLoading] = useState(true);
 
+    useEffect(() => {
+        loadFriends();
+    }, []);
+
+    const loadFriends = async () => {
+        try {
+            setFriendsLoading(true);
+            const [friendsData, requestsData] = await Promise.all([
+                getFriends(user.id),
+                getPendingFriendRequests(user.id)
+            ]);
+            setFriends(friendsData);
+            setPendingRequests(requestsData);
+        } catch (error) {
+            console.error('Error loading friends:', error);
+        } finally {
+            setFriendsLoading(false);
+        }
+    };
+    
     const handleSignOut = async () => {
         Alert.alert(
             'Sign Out',
@@ -100,6 +128,96 @@ export const UserProfileScreen = ({ route, navigation }: Props) => {
                                     {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
                                 </Text>
                             </View>
+                        </Card.Content>
+                    </Card>
+
+                    {/* Friends Section */}
+                    <Card style={styles.card}>
+                        <Card.Title
+                            title={`Friends (${friends.length})`}
+                            titleStyle={styles.cardTitle}
+                            right={props => (
+                                <IconButton
+                                    icon="account-plus"
+                                    size={20}
+                                    iconColor={colors.primary}
+                                    onPress={() => {
+                                        // TODO: Add friend functionality
+                                        Alert.alert('Coming Soon', 'Add friend functionality will be available soon!');
+                                    }}
+                                />
+                            )}
+                        />
+                        <Card.Content>
+                            {friendsLoading ? (
+                                <Text style={styles.loadingText}>Loading friends...</Text>
+                            ) : (
+                                <>
+                                    {/* Pending Friend Requests */}
+                                    {pendingRequests.length > 0 && (
+                                        <View style={styles.pendingSection}>
+                                            <Text style={styles.sectionSubtitle}>Pending Requests ({pendingRequests.length})</Text>
+                                            {pendingRequests.map((request) => (
+                                                <View key={request.connection_id} style={styles.friendItem}>
+                                                    <View style={styles.friendInfo}>
+                                                        <MaterialCommunityIcons 
+                                                            name="account-circle" 
+                                                            size={32} 
+                                                            color={colors.primary} 
+                                                        />
+                                                        <View style={styles.friendDetails}>
+                                                            <Text style={styles.friendName}>
+                                                                {request.display_name || request.email}
+                                                            </Text>
+                                                            <Text style={styles.friendEmail}>{request.email}</Text>
+                                                        </View>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                            <Divider style={styles.sectionDivider} />
+                                        </View>
+                                    )}
+
+                                    {/* Friends List */}
+                                    {friends.length > 0 ? (
+                                        <View style={styles.friendsList}>
+                                            <Text style={styles.sectionSubtitle}>Your Friends</Text>
+                                            {friends.map((friend) => (
+                                                <View key={friend.connection_id} style={styles.friendItem}>
+                                                    <View style={styles.friendInfo}>
+                                                        <MaterialCommunityIcons 
+                                                            name="account-circle" 
+                                                            size={32} 
+                                                            color={colors.primary} 
+                                                        />
+                                                        <View style={styles.friendDetails}>
+                                                            <Text style={styles.friendName}>
+                                                                {friend.display_name || friend.email}
+                                                            </Text>
+                                                            <Text style={styles.friendEmail}>{friend.email}</Text>
+                                                            <Text style={styles.friendSince}>
+                                                                Friends since {new Date(friend.connected_since).toLocaleDateString()}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    ) : (
+                                        <View style={styles.emptyState}>
+                                            <MaterialCommunityIcons 
+                                                name="account-group" 
+                                                size={48} 
+                                                color={colors.text.secondary} 
+                                            />
+                                            <Text style={styles.emptyStateText}>No friends yet</Text>
+                                            <Text style={styles.emptyStateSubtext}>
+                                                Add friends to share your nutrition journey!
+                                            </Text>
+                                        </View>
+                                    )}
+                                </>
+                            )}
                         </Card.Content>
                     </Card>
 
@@ -213,5 +331,77 @@ const styles = StyleSheet.create({
     divider: {
         marginVertical: 12,
         backgroundColor: colors.border,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        paddingVertical: 16,
+    },
+    pendingSection: {
+        marginBottom: 16,
+    },
+    sectionSubtitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.text.primary,
+        marginBottom: 12,
+    },
+    sectionDivider: {
+        marginVertical: 16,
+        backgroundColor: colors.border,
+    },
+    friendsList: {
+        // Container for friends list
+    },
+    friendItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderRadius: 8,
+        marginBottom: 8,
+        backgroundColor: colors.background,
+    },
+    friendInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    friendDetails: {
+        marginLeft: 12,
+        flex: 1,
+    },
+    friendName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.text.primary,
+    },
+    friendEmail: {
+        fontSize: 14,
+        color: colors.text.secondary,
+    },
+    friendSince: {
+        fontSize: 12,
+        color: colors.text.secondary,
+        marginTop: 2,
+    },
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 32,
+    },
+    emptyStateText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.text.secondary,
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    emptyStateSubtext: {
+        fontSize: 14,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        paddingHorizontal: 16,
     },
 });

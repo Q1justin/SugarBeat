@@ -157,6 +157,7 @@ export type Database = {
         Row: {
           addressee_id: string
           created_at: string
+          display_name?: string
           id: string
           requester_id: string
           status: string
@@ -165,6 +166,7 @@ export type Database = {
         Insert: {
           addressee_id: string
           created_at?: string
+          display_name?: string
           id?: string
           requester_id: string
           status: string
@@ -173,6 +175,7 @@ export type Database = {
         Update: {
           addressee_id?: string
           created_at?: string
+          display_name?: string
           id?: string
           requester_id?: string
           status?: string

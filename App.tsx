@@ -15,6 +15,7 @@ import { SearchFoodScreen } from './src/screens/food/SearchFoodScreen';
 import { FoodPage } from './src/screens/food/FoodPage';
 import { CreateCustomScreen } from './src/screens/food/CreateCustomScreen';
 import { CreateRecipeScreen } from './src/screens/recipes/CreateRecipeScreen';
+import { UserProfileScreen } from './src/screens/profile/UserProfileScreen';
 import type { FoodItem } from './src/services/api/edamam';
 
 // Screens on this app
@@ -36,6 +37,9 @@ export type RootStackParamList = {
         user: any
     };
     CreateRecipe: {
+        user: any
+    };
+    UserProfile: {
         user: any
     };
 };
@@ -195,6 +199,14 @@ export default function App() {
                                             backgroundColor: colors.cardBackground,
                                         },
                                         headerTintColor: colors.text.primary,
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="UserProfile" 
+                                    component={UserProfileScreen}
+                                    initialParams={{ user }}
+                                    options={{
+                                        headerShown: false,
                                     }}
                                 />
                             </>

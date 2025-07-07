@@ -160,9 +160,20 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                         <MaterialCommunityIcons name="calendar" size={24} color={colors.primary} />
                         <Text style={styles.dateText}>{formatDate(selectedDate)}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleSignOut}>
-                        <MaterialCommunityIcons name="logout" size={24} color={colors.error} />
-                    </TouchableOpacity>
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity 
+                            style={styles.headerButton}
+                            onPress={() => navigation.navigate('UserProfile', { user })}
+                        >
+                            <MaterialCommunityIcons name="account-circle" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={styles.headerButton}
+                            onPress={handleSignOut}
+                        >
+                            <MaterialCommunityIcons name="logout" size={24} color={colors.error} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Date Picker Modal */}
@@ -344,6 +355,15 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 8,
         color: colors.text.primary,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    headerButton: {
+        padding: 8,
+        borderRadius: 8,
     },
     scrollView: {
         flex: 1,

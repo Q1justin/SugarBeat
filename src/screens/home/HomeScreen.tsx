@@ -242,7 +242,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                                             {currentCalorieIntake}kcal / {calorieGoal}kcal
                                         </Text>
                                         <Text style={styles.remainingText}>
-                                            {calorieGoal - currentCalorieIntake}kcal remaining today
+                                            {(calorieGoal - currentCalorieIntake).toFixed(2)}kcal remaining today
                                         </Text>
                                     </View>
                                     <ProgressBar
@@ -258,10 +258,10 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                                 ? <>
                                     <View style={styles.goalStats}>
                                         <Text style={styles.intakeText}>
-                                            {currentProteinIntake}g / {proteinGoal}g
+                                            {(currentProteinIntake).toFixed(2)}g / {proteinGoal}g
                                         </Text>
                                         <Text style={styles.remainingText}>
-                                            {proteinGoal - currentProteinIntake}g remaining today
+                                            {(proteinGoal - currentProteinIntake).toFixed(2)}g remaining today
                                         </Text>
                                     </View>
                                     <ProgressBar

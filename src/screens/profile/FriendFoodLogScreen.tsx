@@ -16,7 +16,7 @@ import { colors } from '../../theme/colors';
 import { getWeeklyFoodLogs } from '../../services/supabase/queries/food';
 import { getUserGoals } from '../../services/supabase/queries/user_goals';
 import { formatTime } from '../../utils';
-import type { Friend } from '../../services/supabase/queries/friends';
+// import type { Friend } from '../../services/supabase/queries/friends';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FriendFoodLog'>;
 

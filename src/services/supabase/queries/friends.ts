@@ -13,6 +13,24 @@ export interface Friend {
     connected_since: string;
 }
 
+/*
+ * FRIENDS SYSTEM IMPLEMENTATION NOTES:
+ * 
+ * Current implementation uses the friend_connections table to manage friendships.
+ * Due to Supabase RLS restrictions, we cannot directly query auth.users from client-side.
+ * 
+ * Current approach:
+ * - Uses simplified user display names based on user ID prefixes
+ * - All functions now query real data from friend_connections table
+ * - No more mock data fallbacks
+ * 
+ * Future improvements could include:
+ * 1. Create a user_profiles table for storing display names, avatars, etc.
+ * 2. Implement RPC functions for secure user data access
+ * 3. Add user search functionality by email/username
+ * 4. Add notification system for friend requests
+ */
+
 // Get all friends for a user (accepted connections)
 export async function getFriends(userId: string): Promise<Friend[]> {
     const { data, error } = await supabase
@@ -23,44 +41,30 @@ export async function getFriends(userId: string): Promise<Friend[]> {
 
     if (error) throw error;
 
-    // For now, return mock data since we can't easily query auth.users
-    // In a real app, you'd need to store user profile data in a separate table
-    const friends: Friend[] = data.map((connection, index) => {
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    // Map connections to friends
+    // Note: Since we can't easily access auth.users from client-side due to RLS,
+    // we'll use a simplified approach with user IDs and generate display names
+    const friends: Friend[] = data.map(connection => {
         const friendId = connection.requester_id === userId 
             ? connection.addressee_id 
             : connection.requester_id;
-
+        
+        // Generate a friendlier display based on the user ID
+        const userPrefix = friendId.slice(0, 8);
+        
         return {
             id: friendId,
-            email: `friend${index + 1}@example.com`, // Mock email
-            display_name: `Friend ${index + 1}`, // Mock display name
+            email: `user-${userPrefix}@app.com`, // Simplified email representation
+            display_name: `User ${userPrefix}`, // Simplified display name
             connection_status: connection.status,
             connection_id: connection.id,
             connected_since: connection.created_at,
         };
     });
-
-    // Add some mock friends for testing (you can remove this later)
-    if (friends.length === 0) {
-        return [
-            {
-                id: 'mock-friend-1',
-                email: 'john.doe@example.com',
-                display_name: 'John Doe',
-                connection_status: 'accepted',
-                connection_id: 'mock-connection-1',
-                connected_since: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-            },
-            {
-                id: 'mock-friend-2',
-                email: 'jane.smith@example.com',
-                display_name: 'Jane Smith',
-                connection_status: 'accepted',
-                connection_id: 'mock-connection-2',
-                connected_since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-            },
-        ];
-    }
 
     return friends;
 }
@@ -75,29 +79,80 @@ export async function getPendingFriendRequests(userId: string): Promise<Friend[]
 
     if (error) throw error;
 
-    // For now, return mock data
-    const requests: Friend[] = data.map((connection, index) => ({
-        id: connection.requester_id,
-        email: `requester${index + 1}@example.com`, // Mock email
-        display_name: `Requester ${index + 1}`, // Mock display name
-        connection_status: connection.status,
-        connection_id: connection.id,
-        connected_since: connection.created_at,
-    }));
-
-    // Add a mock pending request for testing (you can remove this later)
-    if (requests.length === 0) {
-        return [
-            {
-                id: 'mock-requester-1',
-                email: 'alex.wilson@example.com',
-                display_name: 'Alex Wilson',
-                connection_status: 'pending',
-                connection_id: 'mock-pending-1',
-                connected_since: new Date().toISOString(),
-            },
-        ];
+    if (!data || data.length === 0) {
+        return [];
     }
 
+    // Map requests to friends with simplified user data
+    const requests: Friend[] = data.map(connection => {
+        const userPrefix = connection.requester_id.slice(0, 8);
+        
+        return {
+            id: connection.requester_id,
+            email: `user-${userPrefix}@app.com`, // Simplified email representation
+            display_name: `User ${userPrefix}`, // Simplified display name
+            connection_status: connection.status,
+            connection_id: connection.id,
+            connected_since: connection.created_at,
+        };
+    });
+
     return requests;
+}
+
+// Send a friend request
+export async function sendFriendRequest(requesterId: string, addresseeId: string): Promise<void> {
+    // Check if connection already exists
+    const { data: existingConnection, error: checkError } = await supabase
+        .from('friend_connections')
+        .select('*')
+        .or(`and(requester_id.eq.${requesterId},addressee_id.eq.${addresseeId}),and(requester_id.eq.${addresseeId},addressee_id.eq.${requesterId})`)
+        .maybeSingle();
+    
+    if (checkError) throw checkError;
+    
+    if (existingConnection) {
+        throw new Error('Friend connection already exists');
+    }
+    
+    // Create the friend request
+    const { error } = await supabase
+        .from('friend_connections')
+        .insert({
+            requester_id: requesterId,
+            addressee_id: addresseeId,
+            status: 'pending'
+        });
+    
+    if (error) throw error;
+}
+
+// Accept a friend request
+export async function acceptFriendRequest(connectionId: string): Promise<void> {
+    const { error } = await supabase
+        .from('friend_connections')
+        .update({ status: 'accepted' })
+        .eq('id', connectionId);
+    
+    if (error) throw error;
+}
+
+// Reject a friend request
+export async function rejectFriendRequest(connectionId: string): Promise<void> {
+    const { error } = await supabase
+        .from('friend_connections')
+        .delete()
+        .eq('id', connectionId);
+    
+    if (error) throw error;
+}
+
+// Remove a friend (delete the connection)
+export async function removeFriend(connectionId: string): Promise<void> {
+    const { error } = await supabase
+        .from('friend_connections')
+        .delete()
+        .eq('id', connectionId);
+    
+    if (error) throw error;
 }

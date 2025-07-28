@@ -118,9 +118,6 @@ export const UserProfileScreen = ({ route, navigation }: Props) => {
                             <View style={styles.fieldContainer}>
                                 <Text style={styles.fieldLabel}>Email</Text>
                                 <Text style={styles.fieldValue}>{email}</Text>
-                                <Text style={styles.fieldNote}>
-                                    Email cannot be changed from this screen
-                                </Text>
                             </View>
 
                             <View style={styles.fieldContainer}>

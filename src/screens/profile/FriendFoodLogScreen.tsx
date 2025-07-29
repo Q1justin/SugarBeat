@@ -6,6 +6,7 @@ import {
     StyleSheet,
     SafeAreaView,
     Modal,
+    Platform,
 } from 'react-native';
 import { Text, Card, ProgressBar, IconButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -44,7 +45,9 @@ interface UserGoal {
 
 export const FriendFoodLogScreen = ({ navigation, route }: Props) => {
     const { friend, currentUser } = route.params;
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    
+    // Initialize with today's date explicitly
+    const [selectedDate, setSelectedDate] = useState(() => new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
     const [weeklyFoodLogs, setWeeklyFoodLogs] = useState<FoodLog[]>([]);
@@ -163,9 +166,18 @@ export const FriendFoodLogScreen = ({ navigation, route }: Props) => {
     };
 
     const onDateChange = (event: any, selectedDate?: Date) => {
-        setShowDatePicker(false);
-        if (selectedDate) {
-            setSelectedDate(selectedDate);
+        
+        if (Platform.OS === 'android') {
+            // On Android, close the picker and update if user selected a date
+            setShowDatePicker(false);
+            if (event.type === 'set' && selectedDate && selectedDate instanceof Date) {
+                setSelectedDate(selectedDate);
+            }
+        } else {
+            // On iOS, keep the picker open but update the date immediately
+            if (selectedDate && selectedDate instanceof Date) {
+                setSelectedDate(selectedDate);
+            }
         }
     };
 
@@ -209,15 +221,18 @@ export const FriendFoodLogScreen = ({ navigation, route }: Props) => {
                                         onPress={() => setShowDatePicker(false)}
                                         style={styles.modalCloseButton}
                                     >
-                                        <Text style={styles.modalCloseText}>Done</Text>
+                                        <Text style={styles.modalCloseText}>
+                                            {Platform.OS === 'ios' ? 'Done' : 'Close'}
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                                 <DateTimePicker
-                                    value={selectedDate}
+                                    value={selectedDate && selectedDate instanceof Date ? selectedDate : new Date()}
                                     mode="date"
-                                    display="spinner"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                                     onChange={onDateChange}
                                     maximumDate={new Date()}
+                                    minimumDate={new Date(2020, 0, 1)} // Set a reasonable minimum date
                                 />
                             </View>
                         </View>

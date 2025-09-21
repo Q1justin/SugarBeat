@@ -348,7 +348,7 @@ export const FoodPage = ({ route, navigation }: Props) => {
                         right={props => (
                             <IconButton
                                 icon={isFavorite ? "star" : "star-outline"}
-                                size={24}
+                                size={32}
                                 iconColor={isFavorite ? colors.primary : colors.text.secondary}
                                 onPress={handleFavoriteToggle}
                                 disabled={favoriteLoading}
@@ -545,10 +545,10 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     editableNutrientInput: {
-        width: 80,
-        height: 40,
+        width: 60,
+        height: 35,
         backgroundColor: colors.cardBackground,
-        fontSize: 16,
+        fontSize: 14,
     },
     editableInputOutline: {
         borderColor: colors.border,

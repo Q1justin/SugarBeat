@@ -5,6 +5,7 @@ import {
     SafeAreaView,
     TouchableWithoutFeedback,
     Keyboard,
+    Pressable,
 } from 'react-native';
 import { Text, Card, TextInput, FAB, IconButton } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -65,6 +66,14 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
     const [saving, setSaving] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
     const [favoriteLoading, setFavoriteLoading] = useState(false);
+    const [servingUnitMenuVisible, setServingUnitMenuVisible] = useState(false);
+
+    const servingUnitOptions = [
+        { value: 'g', label: 'grams' },
+        { value: 'ml', label: 'milliliters' },
+        { value: 'oz', label: 'ounces' },
+        { value: 'lbs', label: 'pounds' },
+    ];
 
     const handleFavoriteToggle = () => {
         setIsFavorite(!isFavorite);
@@ -114,7 +123,10 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
     };
 
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <TouchableWithoutFeedback onPress={() => {
+            Keyboard.dismiss();
+            setServingUnitMenuVisible(false);
+        }}>
             <SafeAreaView style={styles.container}>
                 <Card style={styles.card}>
                     <Card.Title
@@ -125,7 +137,7 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
                         right={props => (
                             <IconButton
                                 icon={isFavorite ? "star" : "star-outline"}
-                                size={24}
+                                size={32}
                                 iconColor={isFavorite ? colors.primary : colors.text.secondary}
                                 onPress={handleFavoriteToggle}
                                 disabled={favoriteLoading}
@@ -162,16 +174,32 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
                                     returnKeyType="done"
                                     onSubmitEditing={Keyboard.dismiss}
                                 />
-                                <TextInput
-                                    mode="outlined"
-                                    value={servingUnit}
-                                    onChangeText={setServingUnit}
-                                    style={styles.servingUnitInput}
-                                    outlineStyle={styles.inputOutline}
-                                    placeholder="unit"
-                                    returnKeyType="done"
-                                    onSubmitEditing={Keyboard.dismiss}
-                                />
+                                <View style={styles.servingUnitContainer}>
+                                    <Pressable
+                                        style={styles.servingUnitButton}
+                                        onPress={() => setServingUnitMenuVisible(true)}
+                                    >
+                                        <Text style={styles.servingUnitButtonText}>
+                                            {servingUnitOptions.find(option => option.value === servingUnit)?.label || servingUnit}
+                                        </Text>
+                                    </Pressable>
+                                    {servingUnitMenuVisible && (
+                                        <View style={styles.servingUnitDropdown}>
+                                            {servingUnitOptions.map((option) => (
+                                                <Pressable
+                                                    key={option.value}
+                                                    style={styles.servingUnitOption}
+                                                    onPress={() => {
+                                                        setServingUnit(option.value);
+                                                        setServingUnitMenuVisible(false);
+                                                    }}
+                                                >
+                                                    <Text style={styles.servingUnitOptionText}>{option.label}</Text>
+                                                </Pressable>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
 
@@ -279,6 +307,59 @@ const styles = StyleSheet.create({
     servingUnitInput: {
         flex: 1,
         backgroundColor: colors.cardBackground,
+    },
+    servingUnitContainer: {
+        flex: 1,
+        position: 'relative',
+    },
+    servingUnitButton: {
+        flex: 1,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 16,
+        backgroundColor: colors.cardBackground,
+        justifyContent: 'center',
+    },
+    servingUnitButtonText: {
+        fontSize: 16,
+        color: colors.text.primary,
+    },
+    servingUnitDropdown: {
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        right: 0,
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: 4,
+        zIndex: 1000,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    servingUnitOption: {
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    servingUnitOptionText: {
+        fontSize: 16,
+        color: colors.text.primary,
+    },
+    servingUnitButtonContent: {
+        justifyContent: 'flex-start',
+        height: 56,
+    },
+    servingUnitButtonLabel: {
+        fontSize: 16,
+        color: colors.text.primary,
+        textAlign: 'left',
     },
     inputOutline: {
         borderColor: colors.border,

@@ -73,6 +73,7 @@ export const CreateCustomScreen = ({ route, navigation }: Props) => {
         { value: 'ml', label: 'milliliters' },
         { value: 'oz', label: 'ounces' },
         { value: 'lbs', label: 'pounds' },
+        { value: 'count', label: 'count' },
     ];
 
     const handleFavoriteToggle = () => {
